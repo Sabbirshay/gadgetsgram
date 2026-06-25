@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gadgets Gram - Admin Panel</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --sidebar: #1e293b;
+      --sidebar-text: #e2e8f0;
+      --sidebar-hover: #334155;
+      --border: #e2e8f0;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
+    
+    /* Login Screen */
+    #login-screen { position: fixed; inset: 0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .login-box { background: var(--surface); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
+    .login-box h2 { margin-bottom: 24px; color: var(--text); }
+    .input-group { margin-bottom: 16px; text-align: left; }
+    .input-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--text-muted); }
+    .input-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
+    .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: 0.2s; display: inline-block; text-align: center; text-decoration: none; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-block { width: 100%; padding: 12px; font-size: 16px; }
+    
+    /* Layout */
+    .sidebar { width: 260px; background: var(--sidebar); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; }
+    .sidebar-header { padding: 24px 20px; font-size: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .nav-list { list-style: none; padding: 16px 0; overflow-y: auto; flex: 1; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: var(--sidebar-text); text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; }
+    .nav-link:hover, .nav-link.active { background: var(--sidebar-hover); color: white; border-left: 4px solid var(--primary); padding-left: 16px; }
+    .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-style: normal; }
+    
+    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 64px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+    .topbar-title { font-size: 20px; font-weight: 600; }
+    .main-content { padding: 32px; overflow-y: auto; flex: 1; }
+    
+    /* Card */
+    .card { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
+    .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 16px; font-weight: 600; }
+    .card-body { padding: 24px; }
+    
+    /* Dashboard Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 24px; }
+    .kpi-card { background: var(--surface); padding: 24px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .kpi-title { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); }
+    
+    /* Table */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 16px 24px; background: #f8fafc; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-pending { background: #fef3c7; color: #b45309; }
+    .badge-confirmed { background: #dbeafe; color: #1d4ed8; }
+    .badge-packed { background: #e0e7ff; color: #4338ca; }
+    .badge-delivered { background: #dcfce3; color: #15803d; }
+    .badge-returned { background: #fee2e2; color: #b91c1c; }
+    .badge-cancelled { background: #f1f5f9; color: #475569; }
+    
+    /* Utility */
+    .d-none { display: none !important; }
+    .d-flex { display: flex; }
+    .justify-between { justify-content: space-between; }
+    .align-center { align-items: center; }
+    .gap-2 { gap: 8px; }
+    .gap-4 { gap: 16px; }
+    
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+    .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
+    
+    /* Filters */
+    .filters-bar { padding: 16px 24px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; gap: 16px; align-items: center; }
+    .filters-bar select, .filters-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>Gadgets Gram Admin</h2>
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="email" value="admin@gadgetsgram.com">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" value="Admin@123456">
+      </div>
+      <button class="btn btn-block" onclick="login()">Sign In</button>
+      <p id="login-error" style="color: var(--danger); display: none; margin-top: 16px; font-size: 14px;">Invalid credentials</p>
+    </div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">Gadgets Gram</div>
+    <ul class="nav-list">
+      <li class="nav-item"><a href="#" class="nav-link active" onclick="navigate('dashboard')">📊 Dashboard</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('orders')">📦 Orders</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('products')">📱 Products</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('customers')">👥 Customers</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('inventory')">🏭 Inventory</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('courier')">🚚 Courier Mgmt</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Marketing module coming soon')">📈 Marketing</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Analytics module coming soon')">📉 Analytics</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Support module coming soon')">🎧 Support</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Finance module coming soon')">💰 Finance</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Team module coming soon')">🧑‍🤝‍🧑 Team</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Settings coming soon')">⚙️ Settings</a></li>
+      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Logs coming soon')">📝 Activity Logs</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div>
+        <button class="btn" style="background:transparent; color: var(--text); border: 1px solid var(--border);" onclick="logout()">Logout</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      
+      <!-- Dashboard View -->
+      <div id="view-dashboard" class="view-section">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Today's Orders</div>
+            <div class="kpi-value" id="kpi-today-orders">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Pending Orders</div>
+            <div class="kpi-value" id="kpi-pending-orders">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Confirmed Orders</div>
+            <div class="kpi-value" id="kpi-confirmed-orders">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Delivered Orders</div>
+            <div class="kpi-value" id="kpi-delivered-orders">0</div>
+          </div>
+        </div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-title">Today's Revenue</div>
+            <div class="kpi-value" id="kpi-today-revenue">৳0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">Monthly Revenue</div>
+            <div class="kpi-value" id="kpi-monthly-revenue">৳0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders View -->
+      <div id="view-orders" class="view-section d-none">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Order List</div>
+            <div class="d-flex gap-2">
+              <button class="btn" onclick="loadOrders()">Refresh</button>
+            </div>
+          </div>
+          <div class="filters-bar">
+            <select id="filter-date" onchange="loadOrders()">
+              <option value="">All Time</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+            </select>
+            <select id="filter-status" onchange="loadOrders()">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="packed">Packed</option>
+              <option value="delivered">Delivered</option>
+              <option value="returned">Returned</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="text" id="filter-search" placeholder="Search Phone/Name/ID..." onkeyup="if(event.key==='Enter') loadOrders()">
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Date</th>
+                  <th>Customer</th>
+                  <th>Phone</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="orders-tbody">
+                <!-- Orders injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products View -->
+      <div id="view-products" class="view-section d-none">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Product List</div>
+            <button class="btn" onclick="showProductModal()">+ Add Product</button>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Price</th>
+                  <th>Sale Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="products-tbody">
+                <!-- Products injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventory View -->
+      <div id="view-inventory" class="view-section d-none">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Inventory Management</div>
+            <div class="d-flex gap-2">
+              <input type="file" id="inventory-csv-upload" accept=".csv" style="display: none;" onchange="uploadInventoryCsv(event)">
+              <button class="btn" style="background: var(--success);" onclick="document.getElementById('inventory-csv-upload').click()">Bulk CSV Update</button>
+              <button class="btn" onclick="loadInventory()">Refresh</button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product ID</th>
+                  <th>Product Name</th>
+                  <th>Available</th>
+                  <th>Reserved</th>
+                  <th>Sold</th>
+                  <th>Returned</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-tbody">
+                <!-- Inventory injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customers View -->
+      <div id="view-customers" class="view-section d-none">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Customer Database</div>
+          </div>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Total Orders</th>
+                  <th>Lifetime Value</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="customers-tbody">
+                <!-- Customers injected here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Courier View -->
+      <div id="view-courier" class="view-section d-none">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Courier Consignments</div>
+            <button class="btn">+ New Consignment</button>
+          </div>
+          <div class="card-body">
+            <p style="color: var(--text-muted)">Mock Courier Integration (Steadfast, Pathao, RedX) will be displayed here.</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Product Modal -->
+  <div id="product-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: var(--surface); padding: 32px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+      <h2 style="margin-bottom: 24px;" id="product-modal-title">Add Product</h2>
+      <form id="product-form" onsubmit="saveProduct(event)">
+        <input type="hidden" id="prod-id">
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" id="prod-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="prod-desc" class="form-control" rows="3"></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Cost/Regular Price</label>
+            <input type="number" id="prod-price" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Selling/Discount Price</label>
+            <input type="number" id="prod-sale" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Stock</label>
+            <input type="number" id="prod-stock" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="prod-status" class="form-control">
+              <option value="active">Active</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+          <button type="button" class="btn" style="background: #e2e8f0; color: #0f172a;" onclick="closeProductModal()">Cancel</button>
+          <button type="submit" class="btn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/orders.js"></script>
+  <script src="/js/products.js"></script>
+  <script src="/js/customers.js"></script>
+  <script src="/js/inventory.js"></script>
+  
+  <script>
+    function navigate(view) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+      document.getElementById(`view-${view}`).classList.remove('d-none');
+      
+      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      document.getElementById('page-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
+      
+      if(view === 'dashboard') loadDashboardKpis();
+      if(view === 'orders') loadOrders();
+      if(view === 'products') loadProducts();
+      if(view === 'customers') loadCustomers();
+      if(view === 'inventory') loadInventory();
+    }
+  </script>
+</body>
+</html>
