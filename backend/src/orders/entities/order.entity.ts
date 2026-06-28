@@ -5,11 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { OrderStatus } from '../../common/enums';
 import { Product } from '../../products/entities/product.entity';
 import { Customer } from '../../customers/entities/customer.entity';
+import { OrderStatusHistory } from './order-status-history.entity';
 
 @Entity('orders')
 export class Order {
@@ -66,9 +68,13 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @OneToMany(() => OrderStatusHistory, (history) => history.order, { eager: true, cascade: true })
+  statusHistory: OrderStatusHistory[];
+
   @CreateDateColumn()
   created_at: Date;
 
   @UpdateDateColumn()
   updated_at: Date;
 }
+

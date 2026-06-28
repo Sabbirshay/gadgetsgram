@@ -15,7 +15,7 @@
     initScrollReveal();
     init3DTilt();
     initParallax();
-    initProductCarousel();
+    loadProducts();
     initFAQ();
     initCountdown();
     initAnimatedCounters();
@@ -275,74 +275,202 @@
   }
 
   /* ══════════════════════════════════════════════════════════════
-     6. PRODUCT CAROUSEL — swipe & buttons
+     6. PRODUCT LOAD & CAROUSEL & MODAL
      ══════════════════════════════════════════════════════════════ */
-  function initProductCarousel() {
+  let globalProducts = [];
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('http://localhost:3000/api/v1/products');
+      if (res.ok) {
+        const json = await res.json();
+        globalProducts = json.data || json;
+        renderProducts(globalProducts);
+      }
+    } catch (err) {
+      console.error('Failed to load products', err);
+    }
+  }
+
+  function renderProducts(products) {
     const carousel = document.getElementById('products-carousel');
+    const orderSelect = document.getElementById('order-product');
+    if (!carousel || !orderSelect) return;
+
+    carousel.innerHTML = '';
+    orderSelect.innerHTML = '<option value="" disabled selected>Select a product...</option>';
+
+    products.forEach((p, index) => {
+      let images = [];
+      try { images = JSON.parse(p.images); } catch(e){}
+      let mainImg = images.length > 0 ? images[0] : 'assets/headphone.png';
+      if (mainImg.startsWith('/')) mainImg = 'http://localhost:3000' + mainImg;
+      
+      const hasDiscount = p.sale_price < p.price;
+      const discountPct = hasDiscount ? Math.round(((p.price - p.sale_price) / p.price) * 100) : 0;
+      
+      const priceDisplay = p.sale_price ? `৳${p.sale_price}` : `৳${p.price}`;
+      const oldPriceDisplay = hasDiscount ? `<span class="product-price-old">৳${p.price}</span>` : '';
+      const saveDisplay = hasDiscount ? `<span class="product-price-save">Save ৳${p.price - p.sale_price}</span>` : '';
+      const badgeDisplay = hasDiscount ? `<span class="product-badge">-${discountPct}%</span>` : '';
+
+      // Carousel Card
+      const card = document.createElement('div');
+      card.className = `product-card tilt-card reveal reveal-delay-${(index % 6) + 1} visible`;
+      card.innerHTML = `
+        <div class="product-card-inner tilt-card-inner">
+          <div class="product-image-wrapper">
+            ${badgeDisplay}
+            <img src="${mainImg}" alt="${p.title}" loading="lazy" width="200" height="200" />
+          </div>
+          <div class="product-info">
+            <div class="product-category">Gadget</div>
+            <div class="product-name">${p.title}</div>
+            <div class="product-price-row">
+              <span class="product-price">${priceDisplay}</span>
+              ${oldPriceDisplay}
+              ${saveDisplay}
+            </div>
+            <button class="btn btn-primary product-cta" onclick="event.stopPropagation(); openOrderForm(${p.id})">🛒 Order Now</button>
+          </div>
+        </div>
+      `;
+      
+      // Open detail modal on click
+      card.addEventListener('click', () => openProductModal(p));
+      carousel.appendChild(card);
+
+      // Order Select Option
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = `${p.title} (${priceDisplay})`;
+      orderSelect.appendChild(opt);
+    });
+
+    initCarouselNavigation(carousel);
+    initModalEvents();
+  }
+
+  window.openOrderForm = function(productId) {
+    const orderSelect = document.getElementById('order-product');
+    if (orderSelect) orderSelect.value = productId;
+    const modal = document.getElementById('product-detail-overlay');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    
+    // Smooth scroll to order form
+    const formSection = document.getElementById('order');
+    if (formSection) {
+      const navHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 70;
+      const top = formSection.getBoundingClientRect().top + window.scrollY - navHeight;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
+  function initCarouselNavigation(carousel) {
     const prevBtn = document.getElementById('carousel-prev');
     const nextBtn = document.getElementById('carousel-next');
-    if (!carousel) return;
 
     const getScrollAmount = () => {
       const card = carousel.querySelector('.product-card');
-      if (!card) return 300;
-      return card.offsetWidth + 24; // gap
+      return card ? card.offsetWidth + 24 : 300;
     };
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => {
-        carousel.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
-      });
+    if (nextBtn) nextBtn.onclick = () => carousel.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
+    if (prevBtn) prevBtn.onclick = () => carousel.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
+
+    let isDown = false, startX, scrollLeft;
+    carousel.onmousedown = (e) => { isDown = true; startX = e.pageX - carousel.offsetLeft; scrollLeft = carousel.scrollLeft; };
+    carousel.onmouseleave = () => { isDown = false; };
+    carousel.onmouseup = () => { isDown = false; };
+    carousel.onmousemove = (e) => { if (!isDown) return; e.preventDefault(); carousel.scrollLeft = scrollLeft - ((e.pageX - carousel.offsetLeft) - startX) * 1.5; };
+  }
+
+  function openProductModal(product) {
+    const modal = document.getElementById('product-detail-overlay');
+    if (!modal) return;
+
+    let images = [];
+    try { images = JSON.parse(product.images); } catch(e){}
+    if (images.length === 0) images = ['assets/headphone.png'];
+    images = images.map(img => img.startsWith('/') ? 'http://localhost:3000' + img : img);
+
+    const mainImg = document.getElementById('modal-main-img');
+    const thumbsContainer = document.getElementById('modal-thumbnails');
+    
+    mainImg.src = images[0];
+    thumbsContainer.innerHTML = '';
+    
+    images.forEach((imgUrl, i) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'thumbnail-item' + (i === 0 ? ' active' : '');
+      thumb.innerHTML = `<img src="${imgUrl}" />`;
+      thumb.onclick = () => {
+        mainImg.src = imgUrl;
+        thumbsContainer.querySelectorAll('.thumbnail-item').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      };
+      thumbsContainer.appendChild(thumb);
+    });
+
+    document.getElementById('modal-product-title').textContent = product.title;
+    
+    const hasDiscount = product.sale_price < product.price;
+    document.getElementById('modal-sale-price').textContent = product.sale_price ? `৳${product.sale_price}` : `৳${product.price}`;
+    document.getElementById('modal-regular-price').textContent = hasDiscount ? `৳${product.price}` : '';
+    document.getElementById('modal-save-badge').style.display = hasDiscount ? 'inline-block' : 'none';
+    document.getElementById('modal-save-badge').textContent = hasDiscount ? `Save ৳${product.price - product.sale_price}` : '';
+
+    const statusBadge = document.getElementById('modal-status-badge');
+    if (product.stock > 0) {
+      statusBadge.textContent = 'In Stock';
+      statusBadge.className = 'modal-status-badge';
+    } else {
+      statusBadge.textContent = 'Out of Stock';
+      statusBadge.className = 'modal-status-badge out-of-stock';
     }
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => {
-        carousel.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
-      });
+    // Render description using marked.js if available
+    const descEl = document.getElementById('modal-description');
+    if (typeof marked !== 'undefined') {
+      descEl.innerHTML = marked.parse(product.description || '');
+    } else {
+      descEl.textContent = product.description || '';
     }
 
-    // Touch swipe momentum
-    let isDown = false;
-    let startX;
-    let scrollLeft;
+    const orderBtn = document.getElementById('modal-order-btn');
+    orderBtn.onclick = () => window.openOrderForm(product.id);
+    if (product.stock <= 0) {
+      orderBtn.disabled = true;
+      orderBtn.innerHTML = 'Out of Stock';
+    } else {
+      orderBtn.disabled = false;
+      orderBtn.innerHTML = '<span class="btn-icon">🛒</span> Order Now';
+    }
 
-    carousel.addEventListener('mousedown', (e) => {
-      isDown = true;
-      carousel.style.cursor = 'grabbing';
-      startX = e.pageX - carousel.offsetLeft;
-      scrollLeft = carousel.scrollLeft;
-    });
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 
-    carousel.addEventListener('mouseleave', () => {
-      isDown = false;
-      carousel.style.cursor = 'grab';
-    });
-
-    carousel.addEventListener('mouseup', () => {
-      isDown = false;
-      carousel.style.cursor = 'grab';
-    });
-
-    carousel.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - carousel.offsetLeft;
-      const walk = (x - startX) * 1.5;
-      carousel.scrollLeft = scrollLeft - walk;
-    });
-
-    // Keyboard navigation
-    carousel.setAttribute('tabindex', '0');
-    carousel.setAttribute('role', 'region');
-    carousel.setAttribute('aria-label', 'Product carousel');
-
-    carousel.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight') {
-        carousel.scrollBy({ left: getScrollAmount(), behavior: 'smooth' });
-      } else if (e.key === 'ArrowLeft') {
-        carousel.scrollBy({ left: -getScrollAmount(), behavior: 'smooth' });
-      }
-    });
+  function initModalEvents() {
+    const modal = document.getElementById('product-detail-overlay');
+    const closeBtn = document.getElementById('modal-close-btn');
+    
+    if (closeBtn) {
+      closeBtn.onclick = () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      };
+    }
+    
+    if (modal) {
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+          document.body.style.overflow = '';
+        }
+      };
+    }
   }
 
   /* ══════════════════════════════════════════════════════════════

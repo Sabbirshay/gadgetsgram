@@ -13,6 +13,7 @@ import { AppService } from './app.service';
 import { User } from './auth/entities/user.entity';
 import { Product } from './products/entities/product.entity';
 import { Order } from './orders/entities/order.entity';
+import { OrderStatusHistory } from './orders/entities/order-status-history.entity';
 import { Customer } from './customers/entities/customer.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { CourierShipment } from './courier/entities/courier-shipment.entity';
@@ -46,6 +47,7 @@ import { InventoryModule } from './inventory/inventory.module';
           User,
           Product,
           Order,
+          OrderStatusHistory,
           Customer,
           Notification,
           CourierShipment,

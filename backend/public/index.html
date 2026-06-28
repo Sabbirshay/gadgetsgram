@@ -211,9 +211,10 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
-                  <th>Date</th>
+                  <th>Placed At</th>
                   <th>Customer</th>
                   <th>Phone</th>
+                  <th>Address</th>
                   <th>Total</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -230,15 +231,26 @@
       <!-- Products View -->
       <div id="view-products" class="view-section d-none">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
             <div class="card-title">Product List</div>
-            <button class="btn" onclick="showProductModal()">+ Add Product</button>
+            <div class="d-flex gap-2">
+              <select id="bulk-product-action" style="padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-primary);">
+                <option value="">Bulk Actions</option>
+                <option value="active">Set Active</option>
+                <option value="unavailable">Set Unavailable</option>
+                <option value="archived">Set Archived</option>
+              </select>
+              <button class="btn btn-secondary" onclick="applyBulkProductAction()">Apply</button>
+              <button class="btn" onclick="showProductModal()">+ Add Product</button>
+            </div>
           </div>
           <div class="table-responsive">
             <table>
               <thead>
                 <tr>
+                  <th style="width: 40px;"><input type="checkbox" id="selectAllProducts" onchange="toggleAllProducts(this)"></th>
                   <th>ID</th>
+                  <th>Image</th>
                   <th>Name</th>
                   <th>Price</th>
                   <th>Sale Price</th>
@@ -330,9 +342,24 @@
     </main>
   </div>
 
+  <!-- Order Detail Modal -->
+  <div id="order-detail-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
+    <div style="background: var(--surface); padding: 0; border-radius: 12px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
+      <!-- Modal Header -->
+      <div style="padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface); z-index: 1; border-radius: 12px 12px 0 0;">
+        <h2 style="font-size: 18px; font-weight: 700; margin: 0;" id="order-detail-title">Order #—</h2>
+        <button onclick="closeOrderDetail()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; border-radius: 6px;" title="Close">&times;</button>
+      </div>
+      <!-- Modal Body -->
+      <div id="order-detail-body" style="padding: 28px;">
+        <p style="color: var(--text-muted)">Loading...</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Product Modal -->
   <div id="product-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: var(--surface); padding: 32px; border-radius: 12px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+    <div style="background: var(--surface); padding: 32px; border-radius: 12px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;">
       <h2 style="margin-bottom: 24px;" id="product-modal-title">Add Product</h2>
       <form id="product-form" onsubmit="saveProduct(event)">
         <input type="hidden" id="prod-id">
@@ -361,13 +388,48 @@
             <label>Status</label>
             <select id="prod-status" class="form-control">
               <option value="active">Active</option>
+              <option value="unavailable">Unavailable</option>
               <option value="archived">Archived</option>
             </select>
           </div>
         </div>
+
+        <!-- Image Upload Section -->
+        <div class="form-group" style="margin-top: 8px;">
+          <label style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: block;">Product Images</label>
+          
+          <!-- Image Preview Grid -->
+          <div id="prod-image-preview" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; min-height: 0;"></div>
+
+          <!-- Upload Methods -->
+          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 2px dashed var(--border); border-radius: 10px; background: #f8fafc;">
+            
+            <!-- URL Input -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <div style="flex: 1; position: relative;">
+                <input type="url" id="prod-image-url" class="form-control" placeholder="Paste image URL (e.g. https://example.com/image.png)" style="padding-right: 10px; font-size: 13px;">
+              </div>
+              <button type="button" class="btn" onclick="addImageFromUrl()" style="padding: 10px 16px; white-space: nowrap; font-size: 13px;">
+                🔗 Add URL
+              </button>
+            </div>
+            
+            <div style="text-align: center; font-size: 13px; color: var(--text-muted); font-weight: 500;">— OR —</div>
+            
+            <!-- File Upload -->
+            <div style="text-align: center;">
+              <input type="file" id="prod-image-file" accept="image/*" multiple style="display: none;" onchange="uploadImageFiles(event)">
+              <button type="button" class="btn" style="background: var(--success); padding: 10px 24px; font-size: 13px;" onclick="document.getElementById('prod-image-file').click()">
+                📁 Upload from Device
+              </button>
+              <p style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">Supports JPG, PNG, GIF, WebP • Max 5MB per file</p>
+            </div>
+          </div>
+        </div>
+
         <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
           <button type="button" class="btn" style="background: #e2e8f0; color: #0f172a;" onclick="closeProductModal()">Cancel</button>
-          <button type="submit" class="btn">Save Product</button>
+          <button type="submit" class="btn" id="prod-save-btn">Save Product</button>
         </div>
       </form>
     </div>

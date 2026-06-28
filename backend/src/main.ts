@@ -10,7 +10,8 @@ async function bootstrap() {
   
   app.setGlobalPrefix('api/v1');
   app.use(helmet({
-    contentSecurityPolicy: false, // Disabled for local dev / simple admin UI
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   const cookieParser = require('cookie-parser');
   app.use(cookieParser());

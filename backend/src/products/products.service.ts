@@ -117,6 +117,11 @@ export class ProductsService implements OnModuleInit {
     return this.productRepository.save(product);
   }
 
+  async bulkUpdateStatus(ids: number[], status: ProductStatus) {
+    if (!ids || ids.length === 0) return { affected: 0 };
+    return this.productRepository.update(ids, { status });
+  }
+
   async remove(id: number) {
     const product = await this.findOne(id);
     product.status = ProductStatus.ARCHIVED;
