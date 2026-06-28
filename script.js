@@ -6,6 +6,12 @@
 (function () {
   'use strict';
 
+  /* ── API Configuration ─────────────────────────────────────── */
+  // Change this to your deployed backend URL (no trailing slash)
+  const API_BASE = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://gadgetsgram-backend.onrender.com';
+
   /* ── DOM Ready ───────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', init);
 
@@ -49,7 +55,7 @@
       };
 
       try {
-        const res = await fetch('http://localhost:3000/api/v1/orders', {
+        const res = await fetch(API_BASE + '/api/v1/orders', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -281,7 +287,7 @@
 
   async function loadProducts() {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/products');
+      const res = await fetch(API_BASE + '/api/v1/products');
       if (res.ok) {
         const json = await res.json();
         globalProducts = json.data || json;
@@ -304,7 +310,7 @@
       let images = [];
       try { images = JSON.parse(p.images); } catch(e){}
       let mainImg = images.length > 0 ? images[0] : 'assets/headphone.png';
-      if (mainImg.startsWith('/')) mainImg = 'http://localhost:3000' + mainImg;
+      if (mainImg.startsWith('/')) mainImg = API_BASE + mainImg;
       
       const hasDiscount = p.sale_price < p.price;
       const discountPct = hasDiscount ? Math.round(((p.price - p.sale_price) / p.price) * 100) : 0;
@@ -393,7 +399,7 @@
     let images = [];
     try { images = JSON.parse(product.images); } catch(e){}
     if (images.length === 0) images = ['assets/headphone.png'];
-    images = images.map(img => img.startsWith('/') ? 'http://localhost:3000' + img : img);
+    images = images.map(img => img.startsWith('/') ? API_BASE + img : img);
 
     const mainImg = document.getElementById('modal-main-img');
     const thumbsContainer = document.getElementById('modal-thumbnails');

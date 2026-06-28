@@ -16,9 +16,11 @@ async function bootstrap() {
   const cookieParser = require('cookie-parser');
   app.use(cookieParser());
   
-  const corsOrigin = configService.get<string>('CORS_ORIGIN', 'http://localhost:8080');
+  const corsOriginRaw = configService.get<string>('CORS_ORIGIN', 'http://localhost:8080');
+  // Support comma-separated origins for multi-environment CORS
+  const corsOrigins = corsOriginRaw.split(',').map(o => o.trim());
   app.enableCors({
-    origin: corsOrigin,
+    origin: corsOrigins.length === 1 ? corsOrigins[0] : corsOrigins,
     credentials: true,
   });
 
