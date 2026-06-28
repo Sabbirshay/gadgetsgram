@@ -13,7 +13,8 @@ export class OrdersController {
   @Public()
   @Post()
   async create(@Body() createOrderDto: CreateOrderDto) {
-    return this.ordersService.create(createOrderDto);
+    const order = await this.ordersService.create(createOrderDto);
+    return { success: true, orderId: order.orderId };
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

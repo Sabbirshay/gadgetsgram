@@ -25,7 +25,7 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const product = await this.productsService.findOne(createOrderDto.product_id);
+    const product = await this.productsService.findOne(createOrderDto.productId);
     
     if (product.stock < (createOrderDto.quantity || 1)) {
       throw new BadRequestException('Not enough stock available');
@@ -40,7 +40,7 @@ export class OrdersService {
     let customer = await this.customerRepository.findOne({ where: { phone: createOrderDto.phone } });
     if (!customer) {
       customer = this.customerRepository.create({
-        name: createOrderDto.customer_name,
+        name: createOrderDto.customerName,
         phone: createOrderDto.phone,
         orders_count: 0,
         lifetime_value: 0,
@@ -55,7 +55,13 @@ export class OrdersService {
     await this.customerRepository.save(customer);
 
     const order = this.orderRepository.create({
-      ...createOrderDto,
+      customer_name: createOrderDto.customerName,
+      phone: createOrderDto.phone,
+      alternative_phone: createOrderDto.alternativePhone,
+      address: createOrderDto.address,
+      district: createOrderDto.district,
+      product_id: createOrderDto.productId,
+      notes: createOrderDto.note,
       quantity,
       price,
       delivery_charge,
@@ -64,7 +70,9 @@ export class OrdersService {
       customer_id: customer.id,
     });
 
-    const savedOrder = await this.orderRepository.save(order);
+    let savedOrder = await this.orderRepository.save(order);
+    savedOrder.orderId = `GG-${1000 + savedOrder.id}`;
+    savedOrder = await this.orderRepository.save(savedOrder);
 
     // Record initial status history: null → pending
     await this.statusHistoryRepository.save(

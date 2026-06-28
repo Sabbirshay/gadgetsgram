@@ -9,6 +9,7 @@ import { extname, join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { ProductsService } from './products.service';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Public, Roles } from '../common/decorators';
 import { UserRole } from '../common/enums';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -22,7 +23,10 @@ if (!existsSync(uploadDir)) {
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly cloudinaryService: CloudinaryService
+  ) {}
 
   @Public()
   @Get()
@@ -55,15 +59,6 @@ export class ProductsController {
   @Post('upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          cb(null, uploadDir);
-        },
-        filename: (_req, file, cb) => {
-          const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-          cb(null, uniqueName);
-        },
-      }),
       fileFilter: (_req, file, cb) => {
         if (!file.mimetype.match(/\/(jpg|jpeg|png|gif|webp|svg\+xml)$/)) {
           cb(new BadRequestException('Only image files are allowed'), false);
@@ -74,11 +69,17 @@ export class ProductsController {
       limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
     }),
   )
-  async uploadImage(@UploadedFile() file: any) {
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
-    return { url: `/uploads/products/${file.filename}` };
+    
+    try {
+      const result = await this.cloudinaryService.uploadImage(file);
+      return { url: result.secure_url };
+    } catch (error) {
+      throw new BadRequestException('Failed to upload image to Cloudinary');
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

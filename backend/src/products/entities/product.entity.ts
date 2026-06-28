@@ -27,6 +27,24 @@ export class Product {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   sale_price: number;
 
+  @Column({ nullable: true })
+  nameEn: string;
+
+  @Column({ nullable: true })
+  nameBn: string;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  originalPrice: number;
+
+  @Column({ type: 'simple-json', nullable: true })
+  specs: string[];
+
+  @Column({ nullable: true })
+  category: string;
+
+  @Column({ default: true })
+  inStock: boolean;
+
   @Column({ default: 0 })
   stock: number;
 

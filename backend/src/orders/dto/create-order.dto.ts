@@ -3,7 +3,7 @@ import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator
 export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
-  customer_name: string;
+  customerName: string;
 
   @IsString()
   @IsNotEmpty()
@@ -11,7 +11,7 @@ export class CreateOrderDto {
 
   @IsString()
   @IsOptional()
-  alternative_phone?: string;
+  alternativePhone?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -23,10 +23,26 @@ export class CreateOrderDto {
 
   @IsNumber()
   @Min(1)
-  product_id: number;
+  productId: number;
 
   @IsNumber()
   @Min(1)
   @IsOptional()
   quantity?: number;
+
+  @IsString()
+  @IsOptional()
+  note?: string;
+
+  @IsString()
+  @IsOptional()
+  productName?: string;
+
+  @IsNumber()
+  @IsOptional()
+  productPrice?: number;
+
+  @IsString()
+  @IsOptional()
+  productImage?: string;
 }

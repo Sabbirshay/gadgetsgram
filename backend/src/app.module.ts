@@ -32,6 +32,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CourierModule } from './courier/courier.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -40,23 +41,31 @@ import { InventoryModule } from './inventory/inventory.module';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService): any => ({
-        type: 'better-sqlite3',
-        database: configService.get<string>('DB_DATABASE', './data/gadgets-gram.db'),
-        entities: [
-          User,
-          Product,
-          Order,
-          OrderStatusHistory,
-          Customer,
-          Notification,
-          CourierShipment,
-          AuditLog,
-          Setting,
-          InventoryTransaction,
-        ],
-        synchronize: true, // Auto-create tables for local dev
-      }),
+      useFactory: (configService: ConfigService): any => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        
+        if (databaseUrl) {
+          return {
+            type: 'postgres',
+            url: databaseUrl,
+            ssl: { rejectUnauthorized: false }, // Render requires SSL
+            entities: [
+              User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
+            ],
+            synchronize: true, // Typically false in prod, but keeping true for automatic schema sync on this project
+          };
+        }
+        
+        // Fallback to SQLite for local development
+        return {
+          type: 'better-sqlite3',
+          database: configService.get<string>('DB_DATABASE', './data/gadgets-gram.db'),
+          entities: [
+            User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
+          ],
+          synchronize: true,
+        };
+      },
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
@@ -79,6 +88,7 @@ import { InventoryModule } from './inventory/inventory.module';
     NotificationsModule,
     CourierModule,
     InventoryModule,
+    CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [

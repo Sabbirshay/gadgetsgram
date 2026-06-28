@@ -1,463 +1,853 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn" dir="ltr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gadgets Gram - Admin Panel</title>
-  <style>
-    :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #f8fafc;
-      --surface: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --sidebar: #1e293b;
-      --sidebar-text: #e2e8f0;
-      --sidebar-hover: #334155;
-      --border: #e2e8f0;
-      --success: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; overflow-x: hidden; }
-    
-    /* Login Screen */
-    #login-screen { position: fixed; inset: 0; background: #e2e8f0; display: flex; align-items: center; justify-content: center; z-index: 9999; }
-    .login-box { background: var(--surface); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center; }
-    .login-box h2 { margin-bottom: 24px; color: var(--text); }
-    .input-group { margin-bottom: 16px; text-align: left; }
-    .input-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--text-muted); }
-    .input-group input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; }
-    .btn { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 6px; font-size: 15px; font-weight: 500; cursor: pointer; transition: 0.2s; display: inline-block; text-align: center; text-decoration: none; }
-    .btn:hover { background: var(--primary-hover); }
-    .btn-danger { background: var(--danger); }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-block { width: 100%; padding: 12px; font-size: 16px; }
-    
-    /* Layout */
-    .sidebar { width: 260px; background: var(--sidebar); color: var(--sidebar-text); display: flex; flex-direction: column; flex-shrink: 0; }
-    .sidebar-header { padding: 24px 20px; font-size: 20px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .nav-list { list-style: none; padding: 16px 0; overflow-y: auto; flex: 1; }
-    .nav-item { margin-bottom: 4px; }
-    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: var(--sidebar-text); text-decoration: none; font-size: 15px; font-weight: 500; transition: 0.2s; }
-    .nav-link:hover, .nav-link.active { background: var(--sidebar-hover); color: white; border-left: 4px solid var(--primary); padding-left: 16px; }
-    .nav-link i { margin-right: 12px; width: 20px; text-align: center; font-style: normal; }
-    
-    .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-    .topbar { height: 64px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
-    .topbar-title { font-size: 20px; font-weight: 600; }
-    .main-content { padding: 32px; overflow-y: auto; flex: 1; }
-    
-    /* Card */
-    .card { background: var(--surface); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid var(--border); overflow: hidden; margin-bottom: 24px; }
-    .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .card-title { font-size: 16px; font-weight: 600; }
-    .card-body { padding: 24px; }
-    
-    /* Dashboard Grid */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-bottom: 24px; }
-    .kpi-card { background: var(--surface); padding: 24px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .kpi-title { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; }
-    .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); }
-    
-    /* Table */
-    .table-responsive { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { padding: 16px 24px; background: #f8fafc; font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
-    td { padding: 16px 24px; font-size: 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-    tr:last-child td { border-bottom: none; }
-    
-    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
-    .badge-pending { background: #fef3c7; color: #b45309; }
-    .badge-confirmed { background: #dbeafe; color: #1d4ed8; }
-    .badge-packed { background: #e0e7ff; color: #4338ca; }
-    .badge-delivered { background: #dcfce3; color: #15803d; }
-    .badge-returned { background: #fee2e2; color: #b91c1c; }
-    .badge-cancelled { background: #f1f5f9; color: #475569; }
-    
-    /* Utility */
-    .d-none { display: none !important; }
-    .d-flex { display: flex; }
-    .justify-between { justify-content: space-between; }
-    .align-center { align-items: center; }
-    .gap-2 { gap: 8px; }
-    .gap-4 { gap: 16px; }
-    
-    /* Forms */
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-    .form-control { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
-    
-    /* Filters */
-    .filters-bar { padding: 16px 24px; border-bottom: 1px solid var(--border); background: #f8fafc; display: flex; gap: 16px; align-items: center; }
-    .filters-bar select, .filters-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- SEO -->
+  <title>Gadgets Gram — গ্যাজেটস গ্রাম | Premium Gadgets at Honest Prices</title>
+  <meta name="description" content="Gadgets Gram (গ্যাজেটস গ্রাম) — Your one-stop gadget solution. 100% authentic mobile accessories, audio, smart wearables, and smart home devices at the best prices with fast delivery across Bangladesh." />
+  <meta name="keywords" content="gadgets gram, গ্যাজেটস গ্রাম, gadgets, mobile accessories, earbuds, headphones, smartwatch, Bangladesh, online gadget shop" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Gadgets Gram — গ্যাজেটস গ্রাম | Premium Gadgets at Honest Prices" />
+  <meta property="og:description" content="Your one-stop gadget solution. 100% authentic products at the best prices." />
+  <meta property="og:image" content="assets/cover.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="bn_BD" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    "name": "Gadgets Gram - গ্যাজেটস গ্রাম",
+    "description": "Premium gadgets at honest prices. Mobile accessories, audio, wearables, and smart home devices.",
+    "url": "",
+    "logo": "assets/logo.png",
+    "telephone": "+8801XXXXXXXXX",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "BD"
+    },
+    "priceRange": "৳৳"
+  }
+  </script>
+  <!-- Marked JS for Markdown -->
+  <script src="marked.min.js"></script>
 </head>
 <body>
 
-  <!-- Login Screen -->
-  <div id="login-screen">
-    <div class="login-box">
-      <h2>Gadgets Gram Admin</h2>
-      <div class="input-group">
-        <label>Email</label>
-        <input type="email" id="email" value="admin@gadgetsgram.com">
+  <!-- ═══════════════════════════════════════════════════════════════
+       NAVIGATION
+       ═══════════════════════════════════════════════════════════════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar-inner">
+      <a href="#" class="nav-logo" aria-label="Gadgets Gram Home">
+        <img src="assets/logo.png" alt="Gadgets Gram Logo" width="44" height="44" loading="eager" />
+        <span class="nav-logo-text"><span class="blue">Gadget</span> <span class="orange">Gram</span></span>
+      </a>
+
+      <div class="nav-links" id="nav-links">
+        <a href="#products" class="nav-link">Products</a>
+        <a href="#benefits" class="nav-link">Why Us</a>
+        <a href="#reviews" class="nav-link">Reviews</a>
+        <a href="#offers" class="nav-link">Offers</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+        <a href="#order" class="btn btn-primary nav-cta">Order Now</a>
       </div>
-      <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="password" value="Admin@123456">
-      </div>
-      <button class="btn btn-block" onclick="login()">Sign In</button>
-      <p id="login-error" style="color: var(--danger); display: none; margin-top: 16px; font-size: 14px;">Invalid credentials</p>
+
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
-  </div>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-header">Gadgets Gram</div>
-    <ul class="nav-list">
-      <li class="nav-item"><a href="#" class="nav-link active" onclick="navigate('dashboard')">📊 Dashboard</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('orders')">📦 Orders</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('products')">📱 Products</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('customers')">👥 Customers</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('inventory')">🏭 Inventory</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="navigate('courier')">🚚 Courier Mgmt</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Marketing module coming soon')">📈 Marketing</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Analytics module coming soon')">📉 Analytics</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Support module coming soon')">🎧 Support</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Finance module coming soon')">💰 Finance</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Team module coming soon')">🧑‍🤝‍🧑 Team</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Settings coming soon')">⚙️ Settings</a></li>
-      <li class="nav-item"><a href="#" class="nav-link" onclick="alert('Logs coming soon')">📝 Activity Logs</a></li>
-    </ul>
-  </aside>
+    <!-- Mobile Menu -->
+    <div class="nav-mobile" id="nav-mobile">
+      <a href="#products" class="nav-link" data-mobile-link>Products</a>
+      <a href="#benefits" class="nav-link" data-mobile-link>Why Us</a>
+      <a href="#reviews" class="nav-link" data-mobile-link>Reviews</a>
+      <a href="#offers" class="nav-link" data-mobile-link>Offers</a>
+      <a href="#faq" class="nav-link" data-mobile-link>FAQ</a>
+      <a href="#order" class="btn btn-primary btn-lg" data-mobile-link>🛒 Order Now</a>
+    </div>
+  </nav>
 
-  <!-- Main Content -->
-  <div class="main-wrapper">
-    <header class="topbar">
-      <div class="topbar-title" id="page-title">Dashboard</div>
-      <div>
-        <button class="btn" style="background:transparent; color: var(--text); border: 1px solid var(--border);" onclick="logout()">Logout</button>
-      </div>
-    </header>
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 1: HERO
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <!-- Three.js Canvas -->
+    <canvas id="hero-3d-canvas"></canvas>
 
-    <main class="main-content">
-      
-      <!-- Dashboard View -->
-      <div id="view-dashboard" class="view-section">
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-title">Today's Orders</div>
-            <div class="kpi-value" id="kpi-today-orders">0</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-title">Pending Orders</div>
-            <div class="kpi-value" id="kpi-pending-orders">0</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-title">Confirmed Orders</div>
-            <div class="kpi-value" id="kpi-confirmed-orders">0</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-title">Delivered Orders</div>
-            <div class="kpi-value" id="kpi-delivered-orders">0</div>
-          </div>
+    <!-- Background layers (Fallback) -->
+    <div class="hero-bg">
+      <div class="hero-bg-image" id="parallax-bg"></div>
+      <div class="hero-bg-gradient"></div>
+      <div class="hero-orb hero-orb-1"></div>
+      <div class="hero-orb hero-orb-2"></div>
+      <div class="hero-orb hero-orb-3"></div>
+    </div>
+
+    <div class="container hero-content">
+      <!-- Left: Text -->
+      <div class="hero-text">
+        <div class="hero-badge shimmer-text">
+          <span class="hero-badge-dot"></span>
+          Your One-Stop Gadget Solution
         </div>
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-title">Today's Revenue</div>
-            <div class="kpi-value" id="kpi-today-revenue">৳0</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-title">Monthly Revenue</div>
-            <div class="kpi-value" id="kpi-monthly-revenue">৳0</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Orders View -->
-      <div id="view-orders" class="view-section d-none">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Order List</div>
-            <div class="d-flex gap-2">
-              <button class="btn" onclick="loadOrders()">Refresh</button>
+        <h1 class="hero-headline">
+          <span class="line">Premium Gadgets</span>
+          <span class="line">at <span class="text-gradient">Honest Prices</span></span>
+        </h1>
+
+        <p class="hero-subheadline">
+          Discover 100% authentic mobile accessories, audio gear, smart wearables, and smart home devices — all at the best prices with fast delivery across Bangladesh.
+        </p>
+
+        <p class="hero-bengali-tagline bengali">
+          সেরা গ্যাজেট, সেরা দামে — Smart Tech, Better Life
+        </p>
+
+        <div class="hero-ctas">
+          <a href="#order" class="btn btn-primary btn-lg" id="hero-cta-order">
+            <span class="btn-icon">🛒</span> Order Now
+          </a>
+          <a href="https://wa.me/8801XXXXXXXXX" class="btn btn-whatsapp btn-lg" target="_blank" rel="noopener" id="hero-cta-whatsapp">
+            <span class="btn-icon">💬</span> WhatsApp
+          </a>
+          <a href="#products" class="btn btn-secondary btn-lg" id="hero-cta-explore">
+            <span class="btn-icon">✨</span> Explore
+          </a>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-item">
+            <div class="trust-icon">✅</div>
+            <div>
+              <div>100% Authentic</div>
+              <div class="trust-label-bn bengali">পণ্যের নিশ্চয়তা</div>
             </div>
           </div>
-          <div class="filters-bar">
-            <select id="filter-date" onchange="loadOrders()">
-              <option value="">All Time</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-              <option value="this_week">This Week</option>
-            </select>
-            <select id="filter-status" onchange="loadOrders()">
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="packed">Packed</option>
-              <option value="delivered">Delivered</option>
-              <option value="returned">Returned</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <input type="text" id="filter-search" placeholder="Search Phone/Name/ID..." onkeyup="if(event.key==='Enter') loadOrders()">
-          </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Placed At</th>
-                  <th>Customer</th>
-                  <th>Phone</th>
-                  <th>Address</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="orders-tbody">
-                <!-- Orders injected here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Products View -->
-      <div id="view-products" class="view-section d-none">
-        <div class="card">
-          <div class="card-header" style="flex-wrap: wrap; gap: 10px;">
-            <div class="card-title">Product List</div>
-            <div class="d-flex gap-2">
-              <select id="bulk-product-action" style="padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-surface); color: var(--text-primary);">
-                <option value="">Bulk Actions</option>
-                <option value="active">Set Active</option>
-                <option value="unavailable">Set Unavailable</option>
-                <option value="archived">Set Archived</option>
-              </select>
-              <button class="btn btn-secondary" onclick="applyBulkProductAction()">Apply</button>
-              <button class="btn" onclick="showProductModal()">+ Add Product</button>
+          <div class="trust-item">
+            <div class="trust-icon">🏷️</div>
+            <div>
+              <div>Best Price</div>
+              <div class="trust-label-bn bengali">সেরা দামে</div>
             </div>
           </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 40px;"><input type="checkbox" id="selectAllProducts" onchange="toggleAllProducts(this)"></th>
-                  <th>ID</th>
-                  <th>Image</th>
-                  <th>Name</th>
-                  <th>Price</th>
-                  <th>Sale Price</th>
-                  <th>Stock</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="products-tbody">
-                <!-- Products injected here -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Inventory View -->
-      <div id="view-inventory" class="view-section d-none">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Inventory Management</div>
-            <div class="d-flex gap-2">
-              <input type="file" id="inventory-csv-upload" accept=".csv" style="display: none;" onchange="uploadInventoryCsv(event)">
-              <button class="btn" style="background: var(--success);" onclick="document.getElementById('inventory-csv-upload').click()">Bulk CSV Update</button>
-              <button class="btn" onclick="loadInventory()">Refresh</button>
+          <div class="trust-item">
+            <div class="trust-icon">🚚</div>
+            <div>
+              <div>Fast Delivery</div>
+              <div class="trust-label-bn bengali">দ্রুত ডেলিভারি</div>
             </div>
           </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Product ID</th>
-                  <th>Product Name</th>
-                  <th>Available</th>
-                  <th>Reserved</th>
-                  <th>Sold</th>
-                  <th>Returned</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="inventory-tbody">
-                <!-- Inventory injected here -->
-              </tbody>
-            </table>
+          <div class="trust-item">
+            <div class="trust-icon">🛡️</div>
+            <div>
+              <div>Dedicated Support</div>
+              <div class="trust-label-bn bengali">আপনার পাশে সবসময়</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Customers View -->
-      <div id="view-customers" class="view-section d-none">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Customer Database</div>
-          </div>
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Email</th>
-                  <th>Total Orders</th>
-                  <th>Lifetime Value</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="customers-tbody">
-                <!-- Customers injected here -->
-              </tbody>
-            </table>
-          </div>
+      <!-- Right: 3D Visual -->
+      <div class="hero-visual" id="hero-visual">
+        <div class="hero-product-showcase" id="hero-logo-tilt">
+          <div class="hero-glow-ring"></div>
+          <div class="hero-glow-ring-2"></div>
+          <img src="assets/headphone.png" alt="Premium Headphone" width="400" height="400" loading="eager" />
         </div>
-      </div>
-
-      <!-- Courier View -->
-      <div id="view-courier" class="view-section d-none">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">Courier Consignments</div>
-            <button class="btn">+ New Consignment</button>
-          </div>
-          <div class="card-body">
-            <p style="color: var(--text-muted)">Mock Courier Integration (Steadfast, Pathao, RedX) will be displayed here.</p>
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <!-- Order Detail Modal -->
-  <div id="order-detail-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: var(--surface); padding: 0; border-radius: 12px; width: 100%; max-width: 720px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);">
-      <!-- Modal Header -->
-      <div style="padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface); z-index: 1; border-radius: 12px 12px 0 0;">
-        <h2 style="font-size: 18px; font-weight: 700; margin: 0;" id="order-detail-title">Order #—</h2>
-        <button onclick="closeOrderDetail()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); padding: 4px 8px; border-radius: 6px;" title="Close">&times;</button>
-      </div>
-      <!-- Modal Body -->
-      <div id="order-detail-body" style="padding: 28px;">
-        <p style="color: var(--text-muted)">Loading...</p>
       </div>
     </div>
-  </div>
 
-  <!-- Product Modal -->
-  <div id="product-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000;">
-    <div style="background: var(--surface); padding: 32px; border-radius: 12px; width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;">
-      <h2 style="margin-bottom: 24px;" id="product-modal-title">Add Product</h2>
-      <form id="product-form" onsubmit="saveProduct(event)">
-        <input type="hidden" id="prod-id">
-        <div class="form-group">
-          <label>Product Name</label>
-          <input type="text" id="prod-name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="prod-desc" class="form-control" rows="3"></textarea>
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Cost/Regular Price</label>
-            <input type="number" id="prod-price" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Selling/Discount Price</label>
-            <input type="number" id="prod-sale" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Stock</label>
-            <input type="number" id="prod-stock" class="form-control" required>
-          </div>
-          <div class="form-group">
-            <label>Status</label>
-            <select id="prod-status" class="form-control">
-              <option value="active">Active</option>
-              <option value="unavailable">Unavailable</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-        </div>
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator" onclick="document.getElementById('problems').scrollIntoView({behavior: 'smooth'})">
+      <div class="scroll-indicator-text">Scroll</div>
+      <div class="scroll-indicator-arrow"></div>
+      <div class="scroll-indicator-arrow" style="margin-top: -12px; opacity: 0.3;"></div>
+    </div>
+  </section>
 
-        <!-- Image Upload Section -->
-        <div class="form-group" style="margin-top: 8px;">
-          <label style="font-size: 15px; font-weight: 600; margin-bottom: 12px; display: block;">Product Images</label>
-          
-          <!-- Image Preview Grid -->
-          <div id="prod-image-preview" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; min-height: 0;"></div>
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 2: PROBLEM & SOLUTION
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section problems-section" id="problems">
+    <div class="bg-grid"></div>
+    <div class="container">
+      <div class="text-center reveal" style="text-align:center; margin-bottom: var(--sp-12);">
+        <span class="section-label">Problem & Solution</span>
+        <h2 class="section-title">
+          Why Customers <span class="text-gradient">Choose Us</span>
+        </h2>
+        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
+          কেন আমাদের বেছে নেবেন?
+        </p>
+      </div>
 
-          <!-- Upload Methods -->
-          <div style="display: flex; flex-direction: column; gap: 12px; padding: 20px; border: 2px dashed var(--border); border-radius: 10px; background: #f8fafc;">
-            
-            <!-- URL Input -->
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <div style="flex: 1; position: relative;">
-                <input type="url" id="prod-image-url" class="form-control" placeholder="Paste image URL (e.g. https://example.com/image.png)" style="padding-right: 10px; font-size: 13px;">
+      <div class="problems-grid">
+        <!-- Problems -->
+        <div class="problem-side">
+          <h3 class="section-label" style="color: #ef4444; -webkit-text-fill-color: #ef4444;">❌ Common Problems</h3>
+
+          <div class="problem-card reveal reveal-delay-1 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">💸</div>
+              <div>
+                <div class="ps-title">Overpriced Products</div>
+                <div class="ps-desc">Most stores charge 2-3x markup on gadgets, especially branded ones.</div>
+                <div class="ps-desc bengali" style="color:var(--orange-400); margin-top:4px;">অতিরিক্ত দামে পণ্য বিক্রি</div>
               </div>
-              <button type="button" class="btn" onclick="addImageFromUrl()" style="padding: 10px 16px; white-space: nowrap; font-size: 13px;">
-                🔗 Add URL
-              </button>
             </div>
-            
-            <div style="text-align: center; font-size: 13px; color: var(--text-muted); font-weight: 500;">— OR —</div>
-            
-            <!-- File Upload -->
-            <div style="text-align: center;">
-              <input type="file" id="prod-image-file" accept="image/*" multiple style="display: none;" onchange="uploadImageFiles(event)">
-              <button type="button" class="btn" style="background: var(--success); padding: 10px 24px; font-size: 13px;" onclick="document.getElementById('prod-image-file').click()">
-                📁 Upload from Device
-              </button>
-              <p style="margin-top: 8px; font-size: 12px; color: var(--text-muted);">Supports JPG, PNG, GIF, WebP • Max 5MB per file</p>
+          </div>
+
+          <div class="problem-card reveal reveal-delay-2 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">⚠️</div>
+              <div>
+                <div class="ps-title">Fake & Low-Quality Products</div>
+                <div class="ps-desc">Counterfeit gadgets that break within weeks, wasting your money.</div>
+                <div class="ps-desc bengali" style="color:var(--orange-400); margin-top:4px;">নকল ও নিম্নমানের পণ্য</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="problem-card reveal reveal-delay-3 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">🐌</div>
+              <div>
+                <div class="ps-title">Slow & Unreliable Delivery</div>
+                <div class="ps-desc">Waiting weeks for delivery with no tracking or updates.</div>
+                <div class="ps-desc bengali" style="color:var(--orange-400); margin-top:4px;">ধীরগতির ডেলিভারি</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
-          <button type="button" class="btn" style="background: #e2e8f0; color: #0f172a;" onclick="closeProductModal()">Cancel</button>
-          <button type="submit" class="btn" id="prod-save-btn">Save Product</button>
+        <!-- Solutions -->
+        <div class="solution-side">
+          <h3 class="section-label" style="color: #22c55e; -webkit-text-fill-color: #22c55e;">✅ Gadgets Gram Solution</h3>
+
+          <div class="solution-card reveal reveal-delay-1 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">🏷️</div>
+              <div>
+                <div class="ps-title">Honest, Best Prices</div>
+                <div class="ps-desc">We source directly and pass the savings to you. No hidden markups.</div>
+                <div class="ps-desc bengali" style="color:var(--success); margin-top:4px;">সবচেয়ে সেরা দাম</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="solution-card reveal reveal-delay-2 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">✅</div>
+              <div>
+                <div class="ps-title">100% Authentic Products</div>
+                <div class="ps-desc">Every product is verified genuine with warranty and quality assurance.</div>
+                <div class="ps-desc bengali" style="color:var(--success); margin-top:4px;">১০০% অরিজিনাল পণ্য</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="solution-card reveal reveal-delay-3 tilt-card">
+            <div class="tilt-card-inner" style="display:flex; gap:var(--sp-4);">
+              <div class="ps-icon">🚀</div>
+              <div>
+                <div class="ps-title">Fast & Tracked Delivery</div>
+                <div class="ps-desc">Swift delivery across Bangladesh with real-time tracking updates.</div>
+                <div class="ps-desc bengali" style="color:var(--success); margin-top:4px;">দ্রুত ডেলিভারি সারাদেশে</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 3: PRODUCT BENEFITS
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section benefits-section" id="benefits">
+    <div class="bg-grid"></div>
+    <div class="container">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-label">Why Gadgets Gram</span>
+        <h2 class="section-title">
+          What Makes Us <span class="text-gradient">Different</span>
+        </h2>
+        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
+          আমাদের বিশেষত্ব
+        </p>
+      </div>
+
+      <div class="benefits-grid">
+        <div class="glass-card benefit-card reveal reveal-delay-1 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="benefit-icon">🛡️</div>
+            <div>
+              <div class="benefit-title">Authentic Products</div>
+              <div class="benefit-title-bn bengali">পণ্যের নিশ্চয়তা</div>
+              <div class="benefit-desc">Every gadget is sourced from authorized distributors. We guarantee 100% original products with manufacturer warranty.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card benefit-card reveal reveal-delay-2 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="benefit-icon">💰</div>
+            <div>
+              <div class="benefit-title">Best Market Price</div>
+              <div class="benefit-title-bn bengali">সেরা দামে</div>
+              <div class="benefit-desc">Direct sourcing means lower prices. We offer the most competitive prices in Bangladesh — price match guaranteed.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card benefit-card reveal reveal-delay-3 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="benefit-icon">⚡</div>
+            <div>
+              <div class="benefit-title">Lightning Delivery</div>
+              <div class="benefit-title-bn bengali">দ্রুত ডেলিভারি</div>
+              <div class="benefit-desc">Inside Dhaka in 24 hours, nationwide in 2-3 days. Free shipping on orders above ৳1,500.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card benefit-card reveal reveal-delay-4 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="benefit-icon">💝</div>
+            <div>
+              <div class="benefit-title">Dedicated Support</div>
+              <div class="benefit-title-bn bengali">আপনার পাশে সবসময়</div>
+              <div class="benefit-desc">Our team is available via WhatsApp, Messenger, and phone to help you before and after purchase.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 4: PRODUCT SHOWCASE
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section products-section" id="products">
+    <div class="container">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-label">Our Products</span>
+        <h2 class="section-title">
+          Featured <span class="text-gradient">Gadgets</span>
+        </h2>
+        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
+          আমাদের জনপ্রিয় পণ্যসমূহ
+        </p>
+      </div>
+
+      <div class="products-carousel-wrapper">
+        <div class="products-carousel" id="products-carousel">
+          <!-- Dynamically populated via script.js -->
+        </div>
+
+        <!-- Carousel Navigation -->
+        <div class="carousel-nav">
+          <button class="carousel-btn" id="carousel-prev" aria-label="Previous product">◀</button>
+          <button class="carousel-btn" id="carousel-next" aria-label="Next product">▶</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 5: SOCIAL PROOF
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section social-section" id="reviews">
+    <div class="bg-grid"></div>
+    <div class="container">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-label">Social Proof</span>
+        <h2 class="section-title">
+          Trusted by <span class="text-gradient">Thousands</span>
+        </h2>
+        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
+          হাজারো সন্তুষ্ট কাস্টমার
+        </p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-top: var(--sp-12);">
+        <div class="glass-card stat-card reveal reveal-delay-1">
+          <div class="stat-number" data-count="500">0</div>
+          <div class="stat-label">Products Delivered</div>
+          <div class="stat-label-bn bengali">পণ্য ডেলিভারি</div>
+        </div>
+        <div class="glass-card stat-card reveal reveal-delay-2">
+          <div class="stat-number" data-count="200">0</div>
+          <div class="stat-label">Happy Customers</div>
+          <div class="stat-label-bn bengali">সন্তুষ্ট কাস্টমার</div>
+        </div>
+        <div class="glass-card stat-card reveal reveal-delay-3">
+          <div class="stat-number" data-count="4.8" data-decimal="true">0</div>
+          <div class="stat-label">Average Rating</div>
+          <div class="stat-label-bn bengali">গড় রেটিং</div>
+        </div>
+        <div class="glass-card stat-card reveal reveal-delay-4">
+          <div class="stat-number" data-count="24">0</div>
+          <div class="stat-label">Hour Support</div>
+          <div class="stat-label-bn bengali">ঘণ্টা সাপোর্ট</div>
+        </div>
+      </div>
+
+      <!-- Testimonials -->
+      <div class="testimonials-grid">
+        <div class="glass-card testimonial-card reveal reveal-delay-1 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">
+              "অসাধারণ সার্ভিস! আমি একটা হেডফোন অর্ডার করেছিলাম, মাত্র ২ দিনে পেয়ে গেছি। প্রোডাক্ট কোয়ালিটি ও দাম দুটোই সেরা!"
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">র</div>
+              <div>
+                <div class="testimonial-name bengali">রাহুল আহমেদ</div>
+                <div class="testimonial-location bengali">ঢাকা, বাংলাদেশ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card testimonial-card reveal reveal-delay-2 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">
+              "Best gadget shop I've found! Ordered a smartwatch and earbuds — both genuine products at prices much lower than other shops. Highly recommended!"
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">S</div>
+              <div>
+                <div class="testimonial-name">Samira Khan</div>
+                <div class="testimonial-location bengali">চট্টগ্রাম, বাংলাদেশ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card testimonial-card reveal reveal-delay-3 tilt-card">
+          <div class="tilt-card-inner">
+            <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+            <p class="testimonial-text">
+              "গ্যাজেটস গ্রাম থেকে ড্রোন কিনেছি। দাম কম, ডেলিভারি ফাস্ট, প্যাকেজিং ও খুব ভালো ছিলো। আবারও কিনবো ইনশাআল্লাহ।"
+            </p>
+            <div class="testimonial-author">
+              <div class="testimonial-avatar">ম</div>
+              <div>
+                <div class="testimonial-name bengali">মোহাম্মদ ফারুক</div>
+                <div class="testimonial-location bengali">রাজশাহী, বাংলাদেশ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 6: PRICING & OFFERS
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section pricing-section" id="offers">
+    <div class="container">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-label">Special Offers</span>
+        <h2 class="section-title">
+          Limited Time <span class="text-gradient">Deals</span>
+        </h2>
+      </div>
+
+      <div class="offer-banner reveal">
+        <div class="offer-title">🔥 <span class="text-gradient">MEGA SALE</span> 🔥</div>
+        <div class="offer-subtitle bengali">সীমিত সময়ের অফার — এখনই অর্ডার করুন!</div>
+
+        <!-- Countdown -->
+        <div class="countdown" id="countdown">
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-days">00</div>
+            <div class="countdown-label">Days</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-hours">00</div>
+            <div class="countdown-label">Hours</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-mins">00</div>
+            <div class="countdown-label">Mins</div>
+          </div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-unit">
+            <div class="countdown-number" id="countdown-secs">00</div>
+            <div class="countdown-label">Secs</div>
+          </div>
+        </div>
+
+        <div class="offer-features">
+          <div class="offer-feature">
+            <span class="offer-feature-icon">✅</span> Up to 40% OFF
+          </div>
+          <div class="offer-feature">
+            <span class="offer-feature-icon">✅</span> Free Shipping
+          </div>
+          <div class="offer-feature">
+            <span class="offer-feature-icon">✅</span> Cash on Delivery
+          </div>
+          <div class="offer-feature">
+            <span class="offer-feature-icon">✅</span> 7-Day Return
+          </div>
+        </div>
+
+        <div style="margin-top: var(--sp-8);">
+          <a href="#order" class="btn btn-primary btn-lg">🛒 Grab the Deal</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 7: FAQ
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section faq-section" id="faq">
+    <div class="bg-grid"></div>
+    <div class="container">
+      <div style="text-align:center;" class="reveal">
+        <span class="section-label">FAQ</span>
+        <h2 class="section-title">
+          Frequently Asked <span class="text-gradient">Questions</span>
+        </h2>
+        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
+          সাধারণ জিজ্ঞাসা
+        </p>
+      </div>
+
+      <div class="faq-list">
+        <div class="faq-item reveal reveal-delay-1">
+          <button class="faq-question" id="faq-q1" aria-expanded="false" aria-controls="faq-a1">
+            <span>ডেলিভারি কতদিনে পাবো? / How long does delivery take?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-a1" role="region" aria-labelledby="faq-q1">
+            <div class="faq-answer-inner">
+              <p>ঢাকার ভিতরে ২৪ ঘণ্টায় এবং ঢাকার বাইরে ২-৩ কার্যদিবসের মধ্যে ডেলিভারি দেওয়া হয়।</p>
+              <p style="margin-top: 8px; color: var(--text-muted);">Inside Dhaka: 24 hours. Outside Dhaka: 2-3 business days. All orders include tracking.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-2">
+          <button class="faq-question" id="faq-q2" aria-expanded="false" aria-controls="faq-a2">
+            <span>ওয়ারেন্টি আছে কি? / Is there a warranty?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-a2" role="region" aria-labelledby="faq-q2">
+            <div class="faq-answer-inner">
+              <p>হ্যাঁ, সকল পণ্যে অফিসিয়াল ওয়ারেন্টি রয়েছে। পণ্যভেদে ৬ মাস থেকে ১ বছর পর্যন্ত ওয়ারেন্টি দেওয়া হয়।</p>
+              <p style="margin-top: 8px; color: var(--text-muted);">Yes! All products come with official warranty ranging from 6 months to 1 year depending on the product.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-3">
+          <button class="faq-question" id="faq-q3" aria-expanded="false" aria-controls="faq-a3">
+            <span>রিটার্ন পলিসি কি? / What is the return policy?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-a3" role="region" aria-labelledby="faq-q3">
+            <div class="faq-answer-inner">
+              <p>পণ্য পাওয়ার ৭ দিনের মধ্যে রিটার্ন বা এক্সচেঞ্জ করা যাবে যদি কোনো ত্রুটি থাকে। পণ্যটি অবশ্যই অরিজিনাল প্যাকেজিংসহ থাকতে হবে।</p>
+              <p style="margin-top: 8px; color: var(--text-muted);">7-day return/exchange policy for defective products. Items must be in original packaging with all accessories.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-4">
+          <button class="faq-question" id="faq-q4" aria-expanded="false" aria-controls="faq-a4">
+            <span>পেমেন্ট পদ্ধতি কি কি? / What payment methods are accepted?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-a4" role="region" aria-labelledby="faq-q4">
+            <div class="faq-answer-inner">
+              <p>ক্যাশ অন ডেলিভারি (COD), বিকাশ, নগদ, রকেট, এবং ব্যাংক ট্রান্সফার — সব পদ্ধতিতে পেমেন্ট করা যায়।</p>
+              <p style="margin-top: 8px; color: var(--text-muted);">Cash on Delivery (COD), bKash, Nagad, Rocket, and Bank Transfer.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item reveal reveal-delay-5">
+          <button class="faq-question" id="faq-q5" aria-expanded="false" aria-controls="faq-a5">
+            <span>পণ্য কি আসল? / Are products genuine?</span>
+            <span class="faq-icon">▼</span>
+          </button>
+          <div class="faq-answer" id="faq-a5" role="region" aria-labelledby="faq-q5">
+            <div class="faq-answer-inner">
+              <p>অবশ্যই! আমরা ১০০% অরিজিনাল পণ্য বিক্রি করি। প্রতিটি পণ্য অথোরাইজড ডিস্ট্রিবিউটর থেকে সংগ্রহ করা হয়।</p>
+              <p style="margin-top: 8px; color: var(--text-muted);">Absolutely! We sell 100% authentic products sourced from authorized distributors only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       SECTION 8: FINAL CTA & FOOTER
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section final-cta-section" id="order">
+    <div class="final-cta-content container">
+      <div class="reveal">
+        <h2 class="final-cta-title">
+          Ready to <span class="text-gradient">Order?</span>
+        </h2>
+        <p class="final-cta-subtitle bengali">এখনই অর্ডার করুন, সেরা গ্যাজেট সেরা দামে!</p>
+        <p class="final-cta-desc">
+          Get your favorite gadgets delivered to your doorstep. We accept Cash on Delivery, bKash, Nagad, and Bank Transfer.
+        </p>
+      </div>
+
+      <div class="order-form-container reveal reveal-delay-1" style="background: var(--gray-800); padding: 30px; border-radius: 12px; max-width: 500px; margin: 30px auto; text-align: left;">
+        <h3 style="margin-bottom: 20px; color: white; text-align: center;">Place Your Order</h3>
+        <form id="order-form">
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Full Name</label>
+            <input type="text" id="order-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. Rahul Ahmed">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Phone Number</label>
+            <input type="tel" id="order-phone" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. 017XXXXXXXX">
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Address</label>
+            <textarea id="order-address" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. House 12, Road 5, Dhanmondi"></textarea>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">District</label>
+            <select id="order-district" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;">
+              <option value="Dhaka">Dhaka</option>
+              <option value="Chittagong">Chittagong</option>
+              <option value="Sylhet">Sylhet</option>
+              <option value="Rajshahi">Rajshahi</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div id="order-product-summary" style="display: none; background: var(--gray-900); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 20px; align-items: center; gap: 15px;">
+            <img id="order-summary-img" src="" alt="Product" style="width: 60px; height: 60px; object-fit: contain; border-radius: 6px; background: white;" />
+            <div>
+              <div id="order-summary-title" style="color: white; font-weight: 600; margin-bottom: 4px;"></div>
+              <div id="order-summary-price" style="color: var(--orange-400); font-weight: 700;"></div>
+            </div>
+          </div>
+          <input type="hidden" id="order-product-id" required />
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="submit-order-btn">Submit Order (Cash on Delivery)</button>
+          <div id="order-success-msg" style="display:none; color: var(--success); text-align: center; margin-top: 15px; font-weight: bold;">Order placed successfully!</div>
+          <div id="order-error-msg" style="display:none; color: var(--danger); text-align: center; margin-top: 15px;">Failed to place order. Please try again.</div>
+        </form>
+      </div>
+
+      <div class="final-cta-buttons reveal reveal-delay-2">
+        <a href="#order" class="btn btn-primary btn-lg" id="final-order-btn">
+          <span class="btn-icon">🛒</span> Order Now
+        </a>
+        <a href="tel:+8801XXXXXXXXX" class="btn btn-call btn-lg" id="final-call-btn">
+          <span class="btn-icon">📞</span> Call Now
+        </a>
+        <a href="https://wa.me/8801XXXXXXXXX" class="btn btn-whatsapp btn-lg" target="_blank" rel="noopener" id="final-whatsapp-btn">
+          <span class="btn-icon">💬</span> WhatsApp Now
+        </a>
+      </div>
+
+      <div class="hero-trust reveal reveal-delay-2" style="justify-content:center; margin-top: var(--sp-8);">
+        <div class="trust-item">
+          <div class="trust-icon">🚚</div>
+          <div>Free Shipping</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">💳</div>
+          <div>Cash on Delivery</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🔄</div>
+          <div>7-Day Return</div>
+        </div>
+        <div class="trust-item">
+          <div class="trust-icon">🛡️</div>
+          <div>Official Warranty</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <img src="assets/logo.png" alt="Gadgets Gram Logo" width="56" height="56" loading="lazy" />
+          <div class="footer-brand-name">
+            <span style="color:var(--blue-400)">Gadget</span> <span style="color:var(--orange-400)">Gram</span>
+          </div>
+          <p class="footer-brand-desc">
+            Your one-stop gadget solution. Premium quality gadgets at honest prices with fast delivery across Bangladesh.
+          </p>
+          <p class="footer-brand-desc bengali" style="color:var(--orange-400);">
+            সেরা গ্যাজেট, সেরা দামে — Smart Tech, Better Life
+          </p>
+          <div class="footer-socials">
+            <a href="#" class="footer-social" aria-label="Facebook">📘</a>
+            <a href="#" class="footer-social" aria-label="Instagram">📸</a>
+            <a href="#" class="footer-social" aria-label="YouTube">🎬</a>
+            <a href="#" class="footer-social" aria-label="TikTok">🎵</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Quick Links</h4>
+          <div class="footer-links">
+            <a href="#products" class="footer-link">Products</a>
+            <a href="#benefits" class="footer-link">Why Us</a>
+            <a href="#reviews" class="footer-link">Reviews</a>
+            <a href="#offers" class="footer-link">Offers</a>
+            <a href="#faq" class="footer-link">FAQ</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Categories</h4>
+          <div class="footer-links">
+            <a href="#products" class="footer-link">Mobile Accessories</a>
+            <a href="#products" class="footer-link">Audio & Speakers</a>
+            <a href="#products" class="footer-link">Smart Wearables</a>
+            <a href="#products" class="footer-link">Smart Home</a>
+            <a href="#products" class="footer-link">Drones</a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="footer-heading">Support</h4>
+          <div class="footer-links">
+            <a href="#faq" class="footer-link">FAQ</a>
+            <a href="#" class="footer-link">Shipping Policy</a>
+            <a href="#" class="footer-link">Return Policy</a>
+            <a href="#" class="footer-link">Privacy Policy</a>
+            <a href="https://wa.me/8801XXXXXXXXX" class="footer-link" target="_blank" rel="noopener">Contact Us</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          © 2026 Gadgets Gram — গ্যাজেটস গ্রাম. All rights reserved.
+        </div>
+        <div class="footer-copyright bengali" style="color: var(--orange-400);">
+          সর্বস্বত্ব সংরক্ষিত
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       STICKY MOBILE CTA
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="mobile-sticky-cta" id="mobile-sticky-cta">
+    <a href="#order" class="btn btn-primary">
+      <span class="btn-icon">🛒</span> Order
+    </a>
+    <a href="https://wa.me/8801XXXXXXXXX" class="btn btn-whatsapp" target="_blank" rel="noopener">
+      <span class="btn-icon">💬</span> WhatsApp
+    </a>
+    <a href="tel:+8801XXXXXXXXX" class="btn btn-call">
+      <span class="btn-icon">📞</span> Call
+    </a>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ORDER SUCCESS SCREEN
+       ═══════════════════════════════════════════════════════════════ -->
+  <section class="section success-section" id="success-screen" style="display: none; min-height: 70vh; align-items: center; justify-content: center; text-align: center;">
+    <div class="container">
+      <div class="glass-card" style="max-width: 600px; margin: 0 auto; padding: 40px;">
+        <div style="font-size: 64px; margin-bottom: 20px;">🎉</div>
+        <h2 class="text-gradient" style="margin-bottom: 10px;">Order Confirmed!</h2>
+        <p class="bengali" style="font-size: 20px; margin-bottom: 20px; color: var(--success);">
+          আপনার অর্ডার সফলভাবে গৃহীত হয়েছে! আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।
+        </p>
+        <div style="background: var(--gray-800); padding: 15px; border-radius: 8px; margin-bottom: 30px;">
+          <span style="color: var(--text-muted);">Order ID:</span>
+          <strong id="success-order-id" style="font-size: 24px; color: white; display: block; margin-top: 5px;">GG-XXXX</strong>
+        </div>
+        <a href="/" class="btn btn-primary btn-lg" onclick="routeTo('/')">Return Home</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PRODUCT DETAIL OVERLAY (MODAL)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="product-detail-overlay" id="product-detail-overlay">
+    <div class="product-detail-modal">
+      <button class="modal-close-btn" id="modal-close-btn" aria-label="Close modal">✕</button>
+      <div class="product-detail-content">
+        <!-- Left: Image Gallery -->
+        <div class="product-gallery">
+          <div class="main-image-container">
+            <img src="" alt="Product Image" id="modal-main-img" />
+          </div>
+          <div class="thumbnail-list" id="modal-thumbnails">
+            <!-- Thumbnails injected here -->
+          </div>
+        </div>
+        
+        <!-- Right: Details -->
+        <div class="product-details">
+          <div class="modal-status-badge" id="modal-status-badge">Available</div>
+          <h2 class="modal-product-title" id="modal-product-title">Product Title</h2>
+          <h3 class="modal-product-title-bn bengali" id="modal-product-title-bn" style="color: var(--text-muted); font-size: 18px; margin-top: -10px; margin-bottom: 15px;"></h3>
+          
+          <div class="modal-price-row">
+            <span class="modal-sale-price" id="modal-sale-price">৳0</span>
+            <span class="modal-regular-price" id="modal-regular-price">৳0</span>
+            <span class="modal-save-badge" id="modal-save-badge">Save ৳0</span>
+          </div>
+
+          <div class="modal-description markdown-body" id="modal-description">
+            <!-- Markdown converted to HTML injected here -->
+          </div>
+
+          <div class="modal-actions" style="display: flex; flex-direction: column; gap: 12px; margin-top: 20px;">
+            <button class="btn btn-primary btn-lg" id="modal-order-btn" style="width: 100%; background: #f97316;">
+              <span class="btn-icon">🛒</span> Buy Now
+            </button>
+            <a href="https://wa.me/8801XXXXXXXXX" class="btn btn-whatsapp btn-lg" target="_blank" rel="noopener" style="width: 100%; text-align: center;">
+              <span class="btn-icon">💬</span> WhatsApp Order
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="/js/api.js"></script>
-  <script src="/js/dashboard.js"></script>
-  <script src="/js/orders.js"></script>
-  <script src="/js/products.js"></script>
-  <script src="/js/customers.js"></script>
-  <script src="/js/inventory.js"></script>
-  
-  <script>
-    function navigate(view) {
-      document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
-      document.getElementById(`view-${view}`).classList.remove('d-none');
-      
-      document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-      
-      document.getElementById('page-title').innerText = view.charAt(0).toUpperCase() + view.slice(1);
-      
-      if(view === 'dashboard') loadDashboardKpis();
-      if(view === 'orders') loadOrders();
-      if(view === 'products') loadProducts();
-      if(view === 'customers') loadCustomers();
-      if(view === 'inventory') loadInventory();
-    }
-  </script>
+  <!-- JavaScript -->
+  <script src="script.js?v=2"></script>
+  <script type="module" src="three-scene.js"></script>
 </body>
 </html>

@@ -18,6 +18,9 @@ export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ unique: true, nullable: true })
+  orderId: string;
+
   @Column()
   customer_name: string;
 

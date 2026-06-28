@@ -65,7 +65,7 @@ async function loadOrders() {
       if (order.statusHistory && order.statusHistory.length > 0) {
         const sorted = [...order.statusHistory].sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at));
         const latest = sorted[0];
-        if (latest.to_status === order.status && latest.to_status !== 'pending') {
+        if (latest.to_status.toLowerCase() === order.status.toLowerCase()) {
           lastStatusTime = `<div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">${formatDateShort(latest.changed_at)}</div>`;
         }
       }
@@ -74,9 +74,11 @@ async function loadOrders() {
         ? (order.address.length > 30 ? order.address.substring(0, 30) + '…' : order.address)
         : '—';
       
+      const productName = order.product ? (order.product.title || order.product.nameEn) : `Product #${order.product_id}`;
+      
       tbody.innerHTML += `
         <tr>
-          <td><a href="#" onclick="viewOrder(${order.id}); return false;" style="color: var(--primary); text-decoration:none; font-weight: 600;">#${order.id}</a></td>
+          <td><a href="#" onclick="viewOrder(${order.id}); return false;" style="color: var(--primary); text-decoration:none; font-weight: 600;">${order.orderId || ('#' + order.id)}</a></td>
           <td style="font-size: 13px; white-space: nowrap;">${placedAt}</td>
           <td>
             <div style="font-weight: 500">${order.customer_name}</div>
@@ -87,8 +89,11 @@ async function loadOrders() {
           </td>
           <td style="font-size: 13px; max-width: 180px;">
             <div title="${(order.address || '').replace(/"/g, '&quot;')}">${addressShort}</div>
-            <div style="font-size: 11px; color: var(--text-muted);">${order.district || ''}</div>
           </td>
+          <td style="font-size: 13px;">${order.district || '—'}</td>
+          <td style="font-size: 13px; font-weight: 500;">${productName}</td>
+          <td style="font-size: 13px;">${order.quantity}</td>
+          <td style="font-size: 13px;">৳${order.price}</td>
           <td style="font-weight: 600">৳${order.subtotal}</td>
           <td>
             <span class="badge badge-${order.status}">${statusLabel(order.status)}</span>
@@ -318,5 +323,57 @@ async function updateStatusFromModal(orderId, status) {
   } catch (err) {
     console.error('Failed to update status', err);
     alert('Failed to update status');
+  }
+}
+
+// ─── CSV Export ─────────────────────────────────────────────────────────
+
+async function exportOrdersCSV() {
+  const dateFilter = document.getElementById('filter-date').value;
+  const statusFilter = document.getElementById('filter-status').value;
+  const searchFilter = document.getElementById('filter-search').value;
+  
+  let url = '/orders?';
+  if (dateFilter) url += `dateRange=${dateFilter}&`;
+  if (statusFilter) url += `status=${statusFilter}&`;
+  if (searchFilter) url += `search=${searchFilter}&`;
+
+  try {
+    const orders = await fetchApi(url) || [];
+    if (orders.length === 0) {
+      alert("No orders to export!");
+      return;
+    }
+
+    const headers = ["Order ID", "Date", "Customer Name", "Phone", "Address", "District", "Product", "Qty", "Price", "Total", "Status"];
+    const rows = orders.map(order => {
+      const productName = order.product ? (order.product.title || order.product.nameEn) : `Product #${order.product_id}`;
+      return [
+        order.orderId || order.id,
+        order.created_at,
+        order.customer_name,
+        order.phone,
+        `"${(order.address || '').replace(/"/g, '""')}"`,
+        order.district || '',
+        `"${productName.replace(/"/g, '""')}"`,
+        order.quantity,
+        order.price,
+        order.subtotal,
+        order.status
+      ].join(',');
+    });
+
+    const csvContent = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const urlBlob = URL.createObjectURL(blob);
+    link.setAttribute("href", urlBlob);
+    link.setAttribute("download", `gadgets_gram_orders_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (err) {
+    console.error('Failed to export CSV', err);
+    alert('Failed to export CSV');
   }
 }
