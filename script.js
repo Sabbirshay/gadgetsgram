@@ -177,6 +177,10 @@
 
           inner.style.transform =
             `perspective(${1200}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03)`;
+            
+          // Dynamic light tracking for glow effect
+          card.style.setProperty('--mouse-x', `${x * 100}%`);
+          card.style.setProperty('--mouse-y', `${y * 100}%`);
         });
 
         card.addEventListener('mouseleave', () => {

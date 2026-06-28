@@ -87,7 +87,10 @@
        SECTION 1: HERO
        ═══════════════════════════════════════════════════════════════ -->
   <section class="hero" id="hero">
-    <!-- Background layers -->
+    <!-- Three.js Canvas -->
+    <canvas id="hero-3d-canvas"></canvas>
+
+    <!-- Background layers (Fallback) -->
     <div class="hero-bg">
       <div class="hero-bg-image" id="parallax-bg"></div>
       <div class="hero-bg-gradient"></div>
@@ -99,7 +102,7 @@
     <div class="container hero-content">
       <!-- Left: Text -->
       <div class="hero-text">
-        <div class="hero-badge">
+        <div class="hero-badge shimmer-text">
           <span class="hero-badge-dot"></span>
           Your One-Stop Gadget Solution
         </div>
@@ -163,16 +166,19 @@
 
       <!-- Right: 3D Visual -->
       <div class="hero-visual" id="hero-visual">
-        <div class="hero-logo-wrapper" id="hero-logo-tilt">
-          <div class="hero-orbit"></div>
-          <div class="hero-orbit hero-orbit-2"></div>
-          <div class="hero-float-icon">🎧</div>
-          <div class="hero-float-icon">⌚</div>
-          <div class="hero-float-icon">📱</div>
-          <div class="hero-float-icon">🔊</div>
-          <img src="assets/logo.png" alt="Gadgets Gram Logo" width="400" height="400" loading="eager" />
+        <div class="hero-product-showcase" id="hero-logo-tilt">
+          <div class="hero-glow-ring"></div>
+          <div class="hero-glow-ring-2"></div>
+          <img src="assets/headphone.png" alt="Premium Headphone" width="400" height="400" loading="eager" />
         </div>
       </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator" onclick="document.getElementById('problems').scrollIntoView({behavior: 'smooth'})">
+      <div class="scroll-indicator-text">Scroll</div>
+      <div class="scroll-indicator-arrow"></div>
+      <div class="scroll-indicator-arrow" style="margin-top: -12px; opacity: 0.3;"></div>
     </div>
   </section>
 
@@ -816,5 +822,6 @@
 
   <!-- JavaScript -->
   <script src="script.js?v=2"></script>
+  <script type="module" src="three-scene.js"></script>
 </body>
 </html>
