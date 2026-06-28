@@ -80,12 +80,16 @@
       btn.innerText = 'Submitting...';
       btn.disabled = true;
       
+      const newIdInput = document.getElementById('order-product-id');
+      const oldSelect = document.getElementById('order-product');
+      const productIdVal = newIdInput ? newIdInput.value : (oldSelect ? oldSelect.value : '');
+
       const payload = {
         customerName: document.getElementById('order-name').value,
         phone: document.getElementById('order-phone').value,
         address: document.getElementById('order-address').value,
         district: document.getElementById('order-district').value,
-        productId: parseInt(document.getElementById('order-product-id').value, 10),
+        productId: parseInt(productIdVal, 10),
         quantity: 1
       };
 
@@ -336,10 +340,12 @@
   function renderProducts(products) {
     const carousel = document.getElementById('products-carousel');
     const orderSelect = document.getElementById('order-product');
-    if (!carousel || !orderSelect) return;
+    if (!carousel) return;
 
     carousel.innerHTML = '';
-    orderSelect.innerHTML = '<option value="" disabled selected>Select a product...</option>';
+    if (orderSelect) {
+      orderSelect.innerHTML = '<option value="" disabled selected>Select a product...</option>';
+    }
 
     products.forEach((p, index) => {
       let images = [];
@@ -381,11 +387,13 @@
       card.addEventListener('click', () => openProductModal(p));
       carousel.appendChild(card);
 
-      // Order Select Option
-      const opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = `${p.title} (${priceDisplay})`;
-      orderSelect.appendChild(opt);
+      // Order Select Option (Fallback for older HTML versions)
+      if (orderSelect) {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.title} (${priceDisplay})`;
+        orderSelect.appendChild(opt);
+      }
     });
 
     initCarouselNavigation(carousel);
