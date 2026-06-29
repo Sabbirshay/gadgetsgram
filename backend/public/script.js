@@ -325,15 +325,38 @@
   let globalProducts = [];
 
   async function loadProducts() {
+    const carousel = document.getElementById('products-carousel');
     try {
       const res = await fetch(API_BASE + '/api/v1/products');
       if (res.ok) {
         const json = await res.json();
         globalProducts = json.data || json;
         renderProducts(globalProducts);
+      } else {
+        throw new Error('Failed to fetch products');
       }
     } catch (err) {
       console.error('Failed to load products', err);
+      if (carousel) {
+        carousel.innerHTML = `
+          <div class="products-error-state">
+            <p class="error-msg">⚠️ Failed to load products. The server might be warming up. Please try again.</p>
+            <button class="btn btn-primary retry-btn" id="retry-load-products-btn">🔄 Retry Loading</button>
+          </div>
+        `;
+        const retryBtn = document.getElementById('retry-load-products-btn');
+        if (retryBtn) {
+          retryBtn.addEventListener('click', () => {
+            carousel.innerHTML = `
+              <div class="products-loading-state" id="products-loader">
+                <div class="spinner"></div>
+                <p>Loading premium gadgets...</p>
+              </div>
+            `;
+            loadProducts();
+          });
+        }
+      }
     }
   }
 
