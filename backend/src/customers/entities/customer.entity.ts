@@ -22,6 +22,9 @@ export class Customer {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ nullable: true, unique: true })
+  uid: string;
+
   @Column({ default: 0 })
   orders_count: number;
 

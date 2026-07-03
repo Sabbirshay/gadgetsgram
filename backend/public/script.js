@@ -28,6 +28,7 @@
     initSmoothScroll();
     initMobileStickyVisibility();
     initOrderForm();
+    initAuthForm();
     initRouter();
   }
 
@@ -82,7 +83,18 @@
       
       const newIdInput = document.getElementById('order-product-id');
       const oldSelect = document.getElementById('order-product');
-      const productIdVal = newIdInput ? newIdInput.value : (oldSelect ? oldSelect.value : '');
+      const productIdVal = (newIdInput && newIdInput.value) ? newIdInput.value : (oldSelect ? oldSelect.value : '');
+
+      if (!productIdVal) {
+        const errorMsg = document.getElementById('order-error-msg');
+        if (errorMsg) {
+          errorMsg.textContent = 'Please select a product to order.';
+          errorMsg.style.display = 'block';
+        }
+        btn.innerText = originalText;
+        btn.disabled = false;
+        return;
+      }
 
       const payload = {
         customerName: document.getElementById('order-name').value,
@@ -116,6 +128,122 @@
         btn.disabled = false;
       }
     });
+  }
+
+  /* ══════════════════════════════════════════════════════════════
+     0.5. AUTH MODAL LOGIC
+     ══════════════════════════════════════════════════════════════ */
+  let authMode = 'login';
+
+  window.openAuthModal = function(e) {
+    if (e) e.preventDefault();
+    if (localStorage.getItem('gg_token')) {
+      localStorage.removeItem('gg_token');
+      localStorage.removeItem('gg_user');
+      updateAuthUI();
+      return;
+    }
+    document.getElementById('auth-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    authMode = 'login';
+    renderAuthModal();
+  };
+
+  window.closeAuthModal = function() {
+    document.getElementById('auth-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  window.toggleAuthMode = function(e) {
+    if (e) e.preventDefault();
+    authMode = authMode === 'login' ? 'register' : 'login';
+    renderAuthModal();
+  };
+
+  function renderAuthModal() {
+    const isLogin = authMode === 'login';
+    document.getElementById('auth-title').innerText = isLogin ? 'Customer Login' : 'Create Account';
+    document.getElementById('auth-name-group').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('auth-phone-group').style.display = isLogin ? 'none' : 'block';
+    document.getElementById('auth-name').required = !isLogin;
+    document.getElementById('auth-phone').required = !isLogin;
+    document.getElementById('auth-submit-btn').innerText = isLogin ? 'Login' : 'Register';
+    document.getElementById('auth-toggle-text').innerText = isLogin ? "Don't have an account?" : "Already have an account?";
+    document.getElementById('auth-toggle-btn').innerText = isLogin ? 'Register' : 'Login';
+    document.getElementById('auth-error-msg').style.display = 'none';
+  }
+
+  function updateAuthUI() {
+    const link = document.getElementById('nav-auth-link');
+    if (link) {
+      if (localStorage.getItem('gg_token')) {
+        link.innerText = 'Logout';
+      } else {
+        link.innerText = 'Login';
+      }
+    }
+  }
+
+  function initAuthForm() {
+    const form = document.getElementById('auth-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById('auth-submit-btn');
+      const originalText = btn.innerText;
+      btn.innerText = 'Please wait...';
+      btn.disabled = true;
+
+      const payload = {
+        email: document.getElementById('auth-email').value,
+        password: document.getElementById('auth-password').value,
+      };
+
+      if (authMode === 'register') {
+        payload.name = document.getElementById('auth-name').value;
+        payload.phone = document.getElementById('auth-phone').value;
+      }
+
+      try {
+        const endpoint = authMode === 'login' ? '/api/v1/customers/login' : '/api/v1/customers/register';
+        const res = await fetch(API_BASE + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        if (res.ok) {
+          if (authMode === 'login') {
+            localStorage.setItem('gg_token', data.accessToken);
+            localStorage.setItem('gg_user', JSON.stringify(data.user));
+            updateAuthUI();
+            closeAuthModal();
+            form.reset();
+          } else {
+            authMode = 'login';
+            renderAuthModal();
+            document.getElementById('auth-error-msg').textContent = 'Registration successful! Please log in.';
+            document.getElementById('auth-error-msg').style.color = 'var(--success)';
+            document.getElementById('auth-error-msg').style.display = 'block';
+          }
+        } else {
+          throw new Error(data.message || 'Authentication failed');
+        }
+      } catch (err) {
+        document.getElementById('auth-error-msg').textContent = err.message;
+        document.getElementById('auth-error-msg').style.color = 'var(--danger)';
+        document.getElementById('auth-error-msg').style.display = 'block';
+      } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+      }
+    });
+    
+    updateAuthUI();
   }
 
   /* ══════════════════════════════════════════════════════════════
@@ -423,15 +551,31 @@
     initModalEvents();
   }
 
+  window.changeProductSelection = function() {
+    const summaryCard = document.getElementById('order-product-summary');
+    const productGroup = document.getElementById('order-product-group');
+    const idInput = document.getElementById('order-product-id');
+    const select = document.getElementById('order-product');
+    
+    if (summaryCard) summaryCard.style.display = 'none';
+    if (productGroup) productGroup.style.display = 'block';
+    if (idInput) idInput.value = '';
+    if (select) select.required = true;
+  };
+
   window.openOrderForm = function(productId) {
     const product = globalProducts.find(p => p.id === productId);
     if (!product) return;
 
-    // Update hidden input
     const orderProductId = document.getElementById('order-product-id');
     if (orderProductId) orderProductId.value = productId;
     
-    // Update summary card
+    const productGroup = document.getElementById('order-product-group');
+    if (productGroup) productGroup.style.display = 'none';
+
+    const select = document.getElementById('order-product');
+    if (select) select.required = false;
+    
     const summaryCard = document.getElementById('order-product-summary');
     if (summaryCard) {
       summaryCard.style.display = 'flex';

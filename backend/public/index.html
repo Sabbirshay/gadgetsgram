@@ -79,6 +79,7 @@
         <a href="#reviews" class="nav-link">Reviews</a>
         <a href="#offers" class="nav-link">Offers</a>
         <a href="#faq" class="nav-link">FAQ</a>
+        <a href="#" class="nav-link" id="nav-auth-link" onclick="openAuthModal(event)">Login</a>
         <a href="#order" class="btn btn-primary nav-cta">Order Now</a>
       </div>
 
@@ -682,14 +683,21 @@
               <option value="Other">Other</option>
             </select>
           </div>
+          <div class="order-form-group" id="order-product-group">
+            <label for="order-product">Select Product</label>
+            <select id="order-product" required>
+              <option value="" disabled selected>Select a product...</option>
+            </select>
+          </div>
           <div id="order-product-summary" style="display: none; background: var(--gray-900); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 20px; align-items: center; gap: 15px;">
             <img id="order-summary-img" src="" alt="Product" style="width: 60px; height: 60px; object-fit: contain; border-radius: 6px; background: white;" />
             <div>
               <div id="order-summary-title" style="color: white; font-weight: 600; margin-bottom: 4px;"></div>
               <div id="order-summary-price" style="color: var(--orange-400); font-weight: 700;"></div>
             </div>
+            <button type="button" class="btn btn-secondary" style="margin-left:auto; padding:5px 10px; font-size:12px;" onclick="changeProductSelection()">Change</button>
           </div>
-          <input type="hidden" id="order-product-id" required />
+          <input type="hidden" id="order-product-id" />
           <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;" id="submit-order-btn">Submit Order (Cash on Delivery)</button>
           <div id="order-success-msg" style="display:none; color: var(--success); text-align: center; margin-top: 15px; font-weight: bold;">Order placed successfully!</div>
           <div id="order-error-msg" style="display:none; color: var(--danger); text-align: center; margin-top: 15px;">Failed to place order. Please try again.</div>
@@ -810,6 +818,46 @@
     <a href="tel:+8801XXXXXXXXX" class="btn btn-call">
       <span class="btn-icon">📞</span> Call
     </a>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       AUTH OVERLAY (MODAL)
+       ═══════════════════════════════════════════════════════════════ -->
+  <div class="product-detail-overlay" id="auth-overlay">
+    <div class="product-detail-modal" style="max-width: 450px;">
+      <button class="modal-close-btn" id="auth-close-btn" aria-label="Close modal" onclick="closeAuthModal()">✕</button>
+      <div class="product-detail-content" style="flex-direction: column; padding: 30px;">
+        <h2 id="auth-title" style="margin-bottom: 20px; color: white;">Customer Login</h2>
+        
+        <form id="auth-form">
+          <div class="order-form-group" id="auth-name-group" style="display: none;">
+            <label for="auth-name">Full Name</label>
+            <input type="text" id="auth-name" placeholder="e.g. Rahul Ahmed">
+          </div>
+          <div class="order-form-group" id="auth-phone-group" style="display: none;">
+            <label for="auth-phone">Phone Number</label>
+            <input type="tel" id="auth-phone" placeholder="e.g. 017XXXXXXXX">
+          </div>
+          <div class="order-form-group">
+            <label for="auth-email">Email Address</label>
+            <input type="email" id="auth-email" required placeholder="name@example.com">
+          </div>
+          <div class="order-form-group">
+            <label for="auth-password">Password</label>
+            <input type="password" id="auth-password" required placeholder="********">
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 10px;" id="auth-submit-btn">Login</button>
+          
+          <div id="auth-error-msg" style="display:none; color: var(--danger); text-align: center; margin-top: 15px;">Invalid credentials</div>
+          
+          <div style="text-align: center; margin-top: 20px; color: var(--text-muted);">
+            <span id="auth-toggle-text">Don't have an account?</span>
+            <a href="#" style="color: var(--blue-400); font-weight: bold; text-decoration: none;" id="auth-toggle-btn" onclick="toggleAuthMode(event)">Register</a>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════

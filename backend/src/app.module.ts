@@ -33,6 +33,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { CourierModule } from './courier/courier.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { SupabaseModule } from './supabase/supabase.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     CourierModule,
     InventoryModule,
     CloudinaryModule,
+    SupabaseModule,
   ],
   controllers: [AppController],
   providers: [
