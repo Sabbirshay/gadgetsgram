@@ -74,12 +74,22 @@
 
     <!-- Mobile Menu -->
     <div class="nav-mobile" id="nav-mobile">
+      <div style="margin-bottom: var(--sp-4); font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 800; display: flex; align-items: center; gap: var(--sp-2);">
+        <img src="assets/logo.png" alt="Logo" width="32" height="32" style="border-radius: 50%;" />
+        <span><span style="color:var(--blue-400)">Gadget</span> <span style="color:var(--orange-400)">Gram</span></span>
+      </div>
       <a href="#products" class="nav-link" data-mobile-link>Products</a>
       <a href="#benefits" class="nav-link" data-mobile-link>Why Us</a>
       <a href="#reviews" class="nav-link" data-mobile-link>Reviews</a>
       <a href="#offers" class="nav-link" data-mobile-link>Offers</a>
       <a href="#faq" class="nav-link" data-mobile-link>FAQ</a>
-      <a href="#order" class="btn btn-primary btn-lg" data-mobile-link>🛒 Order Now</a>
+      <a href="#order" class="btn btn-primary btn-lg" data-mobile-link style="width: 80%; max-width: 280px; margin-top: 10px;">🛒 Order Now</a>
+      
+      <div style="margin-top: var(--sp-8); display: flex; gap: var(--sp-4);">
+        <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">📘</a>
+        <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">📸</a>
+        <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">🎬</a>
+      </div>
     </div>
   </nav>
 
@@ -629,24 +639,24 @@
         </p>
       </div>
 
-      <div class="order-form-container reveal reveal-delay-1" style="background: var(--gray-800); padding: 30px; border-radius: 12px; max-width: 500px; margin: 30px auto; text-align: left;">
-        <h3 style="margin-bottom: 20px; color: white; text-align: center;">Place Your Order</h3>
+      <div class="order-form-container reveal reveal-delay-1">
+        <h3>Place Your Order</h3>
         <form id="order-form">
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Full Name</label>
-            <input type="text" id="order-name" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. Rahul Ahmed">
+          <div class="order-form-group">
+            <label for="order-name">Full Name</label>
+            <input type="text" id="order-name" required placeholder="e.g. Rahul Ahmed">
           </div>
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Phone Number</label>
-            <input type="tel" id="order-phone" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. 017XXXXXXXX">
+          <div class="order-form-group">
+            <label for="order-phone">Phone Number</label>
+            <input type="tel" id="order-phone" required placeholder="e.g. 017XXXXXXXX">
           </div>
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">Address</label>
-            <textarea id="order-address" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;" placeholder="e.g. House 12, Road 5, Dhanmondi"></textarea>
+          <div class="order-form-group">
+            <label for="order-address">Address</label>
+            <textarea id="order-address" required placeholder="e.g. House 12, Road 5, Dhanmondi"></textarea>
           </div>
-          <div style="margin-bottom: 15px;">
-            <label style="display: block; color: var(--gray-300); margin-bottom: 5px;">District</label>
-            <select id="order-district" required style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--gray-600); background: var(--gray-900); color: white;">
+          <div class="order-form-group">
+            <label for="order-district">District</label>
+            <select id="order-district" required>
               <option value="Dhaka">Dhaka</option>
               <option value="Chittagong">Chittagong</option>
               <option value="Sylhet">Sylhet</option>
