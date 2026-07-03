@@ -30,8 +30,25 @@ async function bootstrap() {
     forbidNonWhitelisted: true,
   }));
 
-  const port = configService.get<number>('PORT', 3000);
-  await app.listen(port);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  await app.init();
+  return app;
 }
-bootstrap();
+
+let cachedApp: any;
+
+export default async function handler(req: any, res: any) {
+  if (!cachedApp) {
+    const app = await bootstrap();
+    cachedApp = app.getHttpAdapter().getInstance();
+  }
+  return cachedApp(req, res);
+}
+
+if (process.env.VERCEL !== '1') {
+  bootstrap().then(async app => {
+    const configService = app.get(ConfigService);
+    const port = configService.get<number>('PORT', 3000);
+    await app.listen(port);
+    console.log(`Application is running on: ${await app.getUrl()}`);
+  });
+}
