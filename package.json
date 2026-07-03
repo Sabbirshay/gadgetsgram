@@ -1,0 +1,21 @@
+{
+  "name": "gadgetsgram",
+  "version": "1.0.0",
+  "description": "Gadgets Gram - Premium Gadgets at Honest Prices",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "lint": "echo 'No linter configured for static HTML'",
+    "test": "echo 'No tests configured'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "keywords": [
+    "gadgets",
+    "ecommerce",
+    "static-site"
+  ],
+  "author": "Gadgets Gram",
+  "license": "UNLICENSED",
+  "private": true
+}
