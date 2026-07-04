@@ -15,11 +15,6 @@ import { UserRole } from '../common/enums';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
-// Ensure upload directory exists
-const uploadDir = join(__dirname, '..', '..', 'public', 'uploads', 'products');
-if (!existsSync(uploadDir)) {
-  mkdirSync(uploadDir, { recursive: true });
-}
 
 @Controller('products')
 export class ProductsController {
