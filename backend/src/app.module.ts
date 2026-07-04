@@ -77,10 +77,12 @@ import { SupabaseModule } from './supabase/supabase.module';
       inject: [ConfigService],
     }),
     EventEmitterModule.forRoot(),
-    ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api/(.*)'],
-    }),
+    ...(process.env.VERCEL !== '1' ? [
+      ServeStaticModule.forRoot({
+        rootPath: join(__dirname, '..', 'public'),
+        exclude: ['/api/(.*)'],
+      })
+    ] : []),
     AuthModule,
     OrdersModule,
     ProductsModule,
