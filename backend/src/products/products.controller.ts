@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete, Param, Body,
+  Controller, Get, Post, Put, Delete, Param, Body, Query,
   ParseIntPipe, UseGuards, UseInterceptors, UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
@@ -25,8 +25,8 @@ export class ProductsController {
 
   @Public()
   @Get()
-  async findAll() {
-    return this.productsService.findAll(); // Only active products
+  async findAll(@Query() query: any) {
+    return this.productsService.findAll(false, query);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

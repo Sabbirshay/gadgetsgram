@@ -4,11 +4,15 @@ import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
 import { SupabaseService } from '../supabase/supabase.service';
 
+import { Product } from '../products/entities/product.entity';
+
 @Injectable()
 export class CustomersService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(Product)
+    private readonly productRepository: Repository<Product>,
     private readonly supabaseService: SupabaseService,
   ) {}
 
@@ -97,5 +101,44 @@ export class CustomersService {
       where: { id },
       relations: { orders: true }
     });
+  }
+
+  async getWishlist(uid: string) {
+    const customer = await this.customerRepository.findOne({
+      where: { uid },
+      relations: { wishlist: true },
+    });
+    if (!customer) throw new BadRequestException('Customer not found');
+    return customer.wishlist;
+  }
+
+  async addToWishlist(uid: string, productId: number) {
+    const customer = await this.customerRepository.findOne({
+      where: { uid },
+      relations: { wishlist: true },
+    });
+    if (!customer) throw new BadRequestException('Customer not found');
+
+    const product = await this.productRepository.findOne({ where: { id: productId } });
+    if (!product) throw new BadRequestException('Product not found');
+
+    // Add if not already in wishlist
+    if (!customer.wishlist.some(p => p.id === productId)) {
+      customer.wishlist.push(product);
+      await this.customerRepository.save(customer);
+    }
+    return customer.wishlist;
+  }
+
+  async removeFromWishlist(uid: string, productId: number) {
+    const customer = await this.customerRepository.findOne({
+      where: { uid },
+      relations: { wishlist: true },
+    });
+    if (!customer) throw new BadRequestException('Customer not found');
+
+    customer.wishlist = customer.wishlist.filter(p => p.id !== productId);
+    await this.customerRepository.save(customer);
+    return customer.wishlist;
   }
 }

@@ -90,11 +90,68 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async findAll(includeAll = false) {
-    if (includeAll) {
-      return this.productRepository.find();
+  async findAll(includeAll = false, query?: any) {
+    const qb = this.productRepository.createQueryBuilder('product');
+    
+    if (!includeAll) {
+      qb.where('product.status = :status', { status: ProductStatus.ACTIVE });
+    } else {
+      qb.where('1=1');
     }
-    return this.productRepository.find({ where: { status: ProductStatus.ACTIVE } });
+
+    if (query) {
+      if (query.category) {
+        qb.andWhere('product.category = :category', { category: query.category });
+      }
+      if (query.brand) {
+        const brands = Array.isArray(query.brand) ? query.brand : query.brand.split(',');
+        qb.andWhere('product.brand IN (:...brands)', { brands });
+      }
+      if (query.minPrice) {
+        qb.andWhere('product.price >= :minPrice', { minPrice: parseFloat(query.minPrice) });
+      }
+      if (query.maxPrice) {
+        qb.andWhere('product.price <= :maxPrice', { maxPrice: parseFloat(query.maxPrice) });
+      }
+      if (query.minRating) {
+        qb.andWhere('product.averageRating >= :minRating', { minRating: parseFloat(query.minRating) });
+      }
+      if (query.isFeatured) {
+        qb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured === 'true' });
+      }
+      if (query.search) {
+        qb.andWhere('(product.title ILIKE :search OR product.description ILIKE :search OR product.brand ILIKE :search)', { search: `%${query.search}%` });
+      }
+      
+      if (query.sort) {
+        switch (query.sort) {
+          case 'price_asc':
+            qb.orderBy('product.price', 'ASC');
+            break;
+          case 'price_desc':
+            qb.orderBy('product.price', 'DESC');
+            break;
+          case 'newest':
+            qb.orderBy('product.created_at', 'DESC');
+            break;
+          case 'rating':
+            qb.orderBy('product.averageRating', 'DESC');
+            break;
+          default:
+            qb.orderBy('product.created_at', 'DESC');
+        }
+      } else {
+        qb.orderBy('product.created_at', 'DESC');
+      }
+      
+      if (query.limit) {
+        qb.take(parseInt(query.limit, 10));
+      }
+    } else {
+      qb.orderBy('product.created_at', 'DESC');
+    }
+
+    return qb.getMany();
   }
 
   async findOne(id: number) {

@@ -67,49 +67,69 @@
        NAVIGATION
        ═══════════════════════════════════════════════════════════════ -->
   <nav class="navbar" id="navbar">
-    <div class="container navbar-inner">
-      <a href="#" class="nav-logo" aria-label="Gadgets Gram Home">
-        <img src="assets/logo.png" alt="Gadgets Gram Logo" width="44" height="44" loading="eager" />
-        <span class="nav-logo-text"><span class="blue">Gadget</span> <span class="orange">Gram</span></span>
+    <div class="container navbar-inner" style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+      <!-- Logo -->
+      <a href="#" class="nav-logo" aria-label="Gadgets Gram Home" style="flex-shrink: 0; text-decoration: none;">
+        <span class="nav-logo-text"><span style="color:var(--text-primary); font-weight:900; letter-spacing:-1px; font-size:1.5rem;">GADGETSGRAM</span></span>
       </a>
 
-      <div class="nav-links" id="nav-links">
-        <a href="#products" class="nav-link">Products</a>
-        <a href="#benefits" class="nav-link">Why Us</a>
-        <a href="#reviews" class="nav-link">Reviews</a>
-        <a href="#offers" class="nav-link">Offers</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-        <a href="#" class="nav-link" id="nav-auth-link" onclick="openAuthModal(event)">Login</a>
-        <a href="#order" class="btn btn-primary nav-cta">Order Now</a>
+      <!-- Large Search Bar -->
+      <div class="nav-search-container" id="desktop-search" style="flex-grow: 1; max-width: 600px; position: relative;">
+        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">🔍</span>
+        <input type="text" placeholder="Search..." style="width: 100%; padding: 12px 16px 12px 48px; border-radius: 99px; border: 1px solid var(--border-glass); background: var(--bg-surface-alt); color: var(--text-primary); outline: none; font-size: 1rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--blue-500)'" onblur="this.style.borderColor='var(--border-glass)'" />
       </div>
 
-      <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false">
+      <!-- Right Nav Links -->
+      <div class="nav-links" id="nav-links" style="display: flex; align-items: center; gap: 24px;">
+        <a href="#orders" class="nav-link" style="display:flex; align-items:center; gap:8px;">
+          <span>📦</span> <span class="nav-label">Orders</span>
+        </a>
+        <a href="#wishlist" class="nav-link" style="display:flex; align-items:center; gap:8px;">
+          <span>❤️</span> <span class="nav-label">Favourites</span>
+        </a>
+        <a href="#cart" class="nav-link" style="display:flex; align-items:center; gap:8px; position:relative;">
+          <span>🛒</span> <span class="nav-label">Cart</span>
+          <span style="position:absolute; top:-8px; right: 20px; background:var(--danger); color:white; font-size:10px; padding:2px 6px; border-radius:10px; font-weight:bold;">0</span>
+        </a>
+        <a href="#" class="nav-profile-link" onclick="openProfile(event)" style="display:flex; align-items:center; margin-left:8px;">
+          <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-surface-alt); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid var(--border-glass);">
+            👤
+          </div>
+        </a>
+      </div>
+
+      <button class="nav-hamburger" id="nav-hamburger" aria-label="Toggle menu" aria-expanded="false" style="display: none;">
         <span></span>
         <span></span>
         <span></span>
       </button>
     </div>
-
-    <!-- Mobile Menu -->
   </nav>
 
-  <div class="nav-mobile" id="nav-mobile">
-    <div style="margin-bottom: var(--sp-4); font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 800; display: flex; align-items: center; gap: var(--sp-2);">
-      <img src="assets/logo.png" alt="Logo" width="32" height="32" style="border-radius: 50%;" />
-      <span><span style="color:var(--blue-400)">Gadget</span> <span style="color:var(--orange-400)">Gram</span></span>
-    </div>
-    <a href="#products" class="nav-link" data-mobile-link>Products</a>
-    <a href="#benefits" class="nav-link" data-mobile-link>Why Us</a>
-    <a href="#reviews" class="nav-link" data-mobile-link>Reviews</a>
-    <a href="#offers" class="nav-link" data-mobile-link>Offers</a>
-    <a href="#faq" class="nav-link" data-mobile-link>FAQ</a>
-    <a href="#order" class="btn btn-primary btn-lg" data-mobile-link style="width: 80%; max-width: 280px; margin-top: 10px;">🛒 Order Now</a>
-    
-    <div style="margin-top: var(--sp-8); display: flex; gap: var(--sp-4);">
-      <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">📘</a>
-      <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">📸</a>
-      <a href="#" class="footer-social" style="width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">🎬</a>
-    </div>
+  <!-- Mobile Bottom Sticky Bar -->
+  <div class="mobile-bottom-bar" id="mobile-bottom-bar">
+    <a href="#" class="bottom-bar-item active">
+      <span class="icon">🏠</span>
+      <span class="label">Home</span>
+    </a>
+    <a href="#search" class="bottom-bar-item">
+      <span class="icon">🔍</span>
+      <span class="label">Search</span>
+    </a>
+    <a href="#cart" class="bottom-bar-item">
+      <span class="icon" style="position:relative;">
+        🛒<span class="badge" style="position:absolute; top:-5px; right:-8px; background:var(--danger); color:white; font-size:9px; padding:2px 5px; border-radius:10px; font-weight:bold;">0</span>
+      </span>
+      <span class="label">Cart</span>
+    </a>
+    <a href="#wishlist" class="bottom-bar-item">
+      <span class="icon">❤️</span>
+      <span class="label">Wishlist</span>
+    </a>
+    <a href="#" class="bottom-bar-item" onclick="openProfile(event)">
+      <span class="icon">👤</span>
+      <span class="label">Profile</span>
+    </a>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════
@@ -132,65 +152,27 @@
     <div class="container hero-content">
       <!-- Left: Text -->
       <div class="hero-text">
-        <div class="hero-badge shimmer-text">
-          <span class="hero-badge-dot"></span>
-          Your One-Stop Gadget Solution
-        </div>
-
-        <h1 class="hero-headline">
-          <span class="line">Premium Gadgets</span>
-          <span class="line">at <span class="text-gradient">Honest Prices</span></span>
+        <h1 class="hero-headline" style="color: var(--text-primary); font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">
+          <span class="line">Elevate Your Tech</span>
+          <span class="line">Premium Gadgets <span style="color: var(--blue-500);">up to 40% OFF</span></span>
         </h1>
 
-        <p class="hero-subheadline">
-          Discover 100% authentic mobile accessories, audio gear, smart wearables, and smart home devices — all at the best prices with fast delivery across Bangladesh.
-        </p>
-
-        <p class="hero-bengali-tagline bengali">
-          সেরা গ্যাজেট, সেরা দামে — Smart Tech, Better Life
-        </p>
-
-        <div class="hero-ctas">
-          <a href="#order" class="btn btn-primary btn-lg" id="hero-cta-order">
-            <span class="btn-icon">🛒</span> Order Now
-          </a>
-          <a href="https://wa.me/8801XXXXXXXXX" class="btn btn-whatsapp btn-lg" target="_blank" rel="noopener" id="hero-cta-whatsapp">
-            <span class="btn-icon">💬</span> WhatsApp
-          </a>
-          <a href="#products" class="btn btn-secondary btn-lg" id="hero-cta-explore">
-            <span class="btn-icon">✨</span> Explore
-          </a>
+        <div style="margin: var(--sp-6) 0; font-size: var(--fs-lg); color: var(--text-secondary); line-height: 1.8;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--success);">✓</span> Ships within 24 hours
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--success);">✓</span> 3-Day Returns Policy
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--success);">✓</span> 10,000+ Happy Customers
+          </div>
         </div>
 
-        <div class="hero-trust">
-          <div class="trust-item">
-            <div class="trust-icon">✅</div>
-            <div>
-              <div>100% Authentic</div>
-              <div class="trust-label-bn bengali">পণ্যের নিশ্চয়তা</div>
-            </div>
-          </div>
-          <div class="trust-item">
-            <div class="trust-icon">🏷️</div>
-            <div>
-              <div>Best Price</div>
-              <div class="trust-label-bn bengali">সেরা দামে</div>
-            </div>
-          </div>
-          <div class="trust-item">
-            <div class="trust-icon">🚚</div>
-            <div>
-              <div>Fast Delivery</div>
-              <div class="trust-label-bn bengali">দ্রুত ডেলিভারি</div>
-            </div>
-          </div>
-          <div class="trust-item">
-            <div class="trust-icon">🛡️</div>
-            <div>
-              <div>Dedicated Support</div>
-              <div class="trust-label-bn bengali">আপনার পাশে সবসময়</div>
-            </div>
-          </div>
+        <div class="hero-ctas">
+          <a href="#products" class="btn btn-primary btn-lg" style="width: 100%; max-width: 250px; justify-content: center; font-size: 1.1rem; padding: 16px;">
+            Shop Now
+          </a>
         </div>
       </div>
 

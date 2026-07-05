@@ -54,6 +54,18 @@ export class Product {
   @Column({ type: 'varchar', default: ProductStatus.ACTIVE })
   status: ProductStatus;
 
+  @Column({ nullable: true })
+  brand: string;
+
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0 })
+  averageRating: number;
+
+  @Column({ default: 0 })
+  reviewCount: number;
+
+  @Column({ default: false })
+  isFeatured: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 

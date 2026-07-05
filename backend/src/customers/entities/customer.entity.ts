@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { Order } from '../../orders/entities/order.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity('customers')
 export class Customer {
@@ -45,4 +48,12 @@ export class Customer {
 
   @OneToMany(() => Order, (order) => order.customer)
   orders: Order[];
+
+  @ManyToMany(() => Product)
+  @JoinTable({
+    name: 'customer_wishlist',
+    joinColumn: { name: 'customer_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'product_id', referencedColumnName: 'id' },
+  })
+  wishlist: Product[];
 }

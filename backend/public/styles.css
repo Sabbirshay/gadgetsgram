@@ -8,39 +8,39 @@
 
 /* ── CSS Custom Properties (Design Tokens) ────────────────────────── */
 :root {
-  /* Colors */
-  --bg-primary:      #060a14;
-  --bg-secondary:    #0c1222;
-  --bg-surface:      #111a2e;
-  --bg-surface-alt:  #162038;
-  --bg-glass:        rgba(255, 255, 255, 0.04);
-  --bg-glass-hover:  rgba(255, 255, 255, 0.08);
+  /* Colors - Light Theme Shift (MLC Inspired) */
+  --bg-primary:      #f8f9fc;
+  --bg-secondary:    #ffffff;
+  --bg-surface:      #ffffff;
+  --bg-surface-alt:  #f1f5f9;
+  --bg-glass:        rgba(255, 255, 255, 0.85);
+  --bg-glass-hover:  rgba(255, 255, 255, 1);
 
-  --blue-400:  #60a5fa;
-  --blue-500:  #3b82f6;
-  --blue-600:  #2563eb;
-  --blue-glow: rgba(59, 130, 246, 0.35);
+  --blue-400:  #8b5cf6; /* MLC Purple Accent */
+  --blue-500:  #7c3aed;
+  --blue-600:  #6d28d9;
+  --blue-glow: rgba(124, 58, 237, 0.25);
 
-  --orange-400: #fb923c;
-  --orange-500: #f97316;
-  --orange-600: #ea580c;
-  --orange-glow: rgba(249, 115, 22, 0.35);
+  --orange-400: #fbbf24; /* MLC Gold/Yellow Accent */
+  --orange-500: #f59e0b;
+  --orange-600: #d97706;
+  --orange-glow: rgba(245, 158, 11, 0.25);
 
-  --accent-gradient: linear-gradient(135deg, var(--blue-500), var(--orange-500));
-  --accent-gradient-r: linear-gradient(135deg, var(--orange-500), var(--blue-500));
+  --accent-gradient: linear-gradient(135deg, var(--blue-500), var(--blue-400));
+  --accent-gradient-r: linear-gradient(135deg, var(--blue-400), var(--blue-500));
 
-  --text-primary:   #f1f5f9;
-  --text-secondary:  #94a3b8;
-  --text-muted:      #64748b;
-  --text-accent-blue: var(--blue-400);
-  --text-accent-orange: var(--orange-400);
+  --text-primary:    #0f172a;
+  --text-secondary:  #475569;
+  --text-muted:      #94a3b8;
+  --text-accent-blue: var(--blue-600);
+  --text-accent-orange: var(--orange-600);
 
-  --border-glass:    rgba(255, 255, 255, 0.08);
-  --border-glow-blue: rgba(59, 130, 246, 0.25);
-  --border-glow-orange: rgba(249, 115, 22, 0.25);
+  --border-glass:    rgba(0, 0, 0, 0.08);
+  --border-glow-blue: rgba(124, 58, 237, 0.2);
+  --border-glow-orange: rgba(245, 158, 11, 0.2);
 
-  --success: #22c55e;
-  --warning: #eab308;
+  --success: #10b981;
+  --warning: #f59e0b;
   --danger:  #ef4444;
 
   /* Typography */
@@ -2779,3 +2779,57 @@ ul, ol {
   margin-left: 16px;
 }
 
+/* ── MOBILE BOTTOM STICKY BAR ─────────────────────────────────────── */
+.mobile-bottom-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-glass);
+  z-index: 1000;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.bottom-bar-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.bottom-bar-item .icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.bottom-bar-item .label {
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.bottom-bar-item.active,
+.bottom-bar-item:hover {
+  color: var(--blue-500);
+}
+
+@media (max-width: 768px) {
+  .mobile-bottom-bar {
+    display: flex;
+  }
+  .navbar-inner {
+    justify-content: center !important; /* Center logo on mobile */
+  }
+  #desktop-search, #nav-links {
+    display: none !important;
+  }
+  .hero {
+    padding-top: 60px; /* Reduced since no top nav links */
+  }
+}
