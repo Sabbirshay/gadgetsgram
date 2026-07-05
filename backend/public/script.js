@@ -934,12 +934,32 @@
   /* ══════════════════════════════════════════════════════════════
      12. PROFILE & TRACKING
      ══════════════════════════════════════════════════════════════ */
+  window.showProfileView = function(view) {
+    document.getElementById('profile-dashboard').style.display = 'none';
+    document.getElementById('profile-edit-view').style.display = 'none';
+    document.getElementById('profile-orders-view').style.display = 'none';
+
+    if (view === 'edit') {
+      document.getElementById('profile-edit-view').style.display = 'block';
+    } else if (view === 'orders') {
+      document.getElementById('profile-orders-view').style.display = 'block';
+      loadOrderHistory();
+    } else {
+      document.getElementById('profile-dashboard').style.display = 'block';
+    }
+  };
+
   window.openProfile = async function() {
     const token = localStorage.getItem('gg_token');
     if (!token) {
       window.routeTo('/');
       openAuthModal();
       return;
+    }
+
+    // Reset to dashboard when opening profile
+    if (typeof showProfileView === 'function') {
+      showProfileView('dashboard');
     }
 
     try {
@@ -951,7 +971,9 @@
       const json = await res.json();
       const profile = json.data || json;
       
-      document.getElementById('profile-name').value = profile.name || '';
+      const name = profile.name || 'User';
+      document.getElementById('profile-header-name').innerText = name;
+      document.getElementById('profile-name').value = name;
       document.getElementById('profile-phone').value = profile.phone || '';
       document.getElementById('profile-address').value = profile.address || '';
       
@@ -993,6 +1015,12 @@
         if (authLink) {
           authLink.innerHTML = `👤 Profile (${name.split(' ')[0]}) - Logout`;
         }
+        document.getElementById('profile-header-name').innerText = name;
+        
+        // Return to dashboard after saving
+        setTimeout(() => {
+          if (typeof showProfileView === 'function') showProfileView('dashboard');
+        }, 1000);
       } else {
         throw new Error('Failed to update');
       }

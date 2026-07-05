@@ -743,51 +743,132 @@
        PROFILE VIEW
        ═══════════════════════════════════════════════════════════════ -->
   <main id="profile-view" style="display: none; padding-top: 100px; padding-bottom: 60px;">
-    <div class="container">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2 style="font-size: 32px; font-weight: 700;">My Profile</h2>
-        <button class="btn btn-secondary" onclick="logout()">Logout</button>
-      </div>
+    <div class="container" style="max-width: 600px;">
       
-      <div style="display: grid; grid-template-columns: 1fr; gap: 32px;">
-        <!-- Profile Form -->
-        <div class="card" style="background: var(--surface); padding: 32px; border-radius: 12px; border: 1px solid var(--border);">
-          <h3 style="margin-bottom: 20px; font-size: 20px;">Personal Information</h3>
-          <form id="profile-form" onsubmit="saveProfile(event)">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-              <div class="order-form-group" style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px;">Full Name</label>
-                <input type="text" id="profile-name" class="form-control" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);" required>
-              </div>
-              <div class="order-form-group" style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px;">Phone Number</label>
-                <input type="tel" id="profile-phone" class="form-control" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);" required disabled title="Phone number cannot be changed">
-              </div>
-              <div class="order-form-group" style="grid-column: 1 / -1; margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px;">Default Address</label>
-                <textarea id="profile-address" class="form-control" rows="3" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);"></textarea>
-              </div>
+      <!-- Dashboard View -->
+      <div id="profile-dashboard">
+        <!-- Header Card -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="showProfileView('edit')">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid var(--primary);">👤</div>
+            <div>
+              <h2 id="profile-header-name" style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">User</h2>
+              <div style="font-size: 14px; color: var(--text-muted);">Welcome to Gadget Gram</div>
             </div>
-            <button type="submit" class="btn btn-primary" id="profile-save-btn">Save Changes</button>
-            <span id="profile-msg" style="margin-left: 12px; font-size: 14px; font-weight: 500;"></span>
-          </form>
+          </div>
+          <div style="color: var(--primary); font-size: 20px;">📝</div>
         </div>
 
-        <!-- Order History -->
-        <div class="card" style="background: var(--surface); padding: 32px; border-radius: 12px; border: 1px solid var(--border);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="font-size: 20px;">Order History</h3>
-            <button class="btn btn-secondary" onclick="loadOrderHistory()" style="padding: 6px 12px; font-size: 14px;">Refresh</button>
+        <!-- Menu Group 1 -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 8px 0; margin-bottom: 24px;">
+          <a href="#" onclick="showProfileView('orders'); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: var(--primary);">📦</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">My Orders</div>
+              <div class="profile-menu-subtitle">View past & current orders</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
+          <a href="#" onclick="showProfileView('edit'); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: var(--primary);">📝</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">Manage Addresses</div>
+              <div class="profile-menu-subtitle">Add/edit personal info & delivery addresses</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
+          <a href="#" onclick="alert('Payment Methods coming soon!'); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: var(--primary);">💳</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">Payment Methods</div>
+              <div class="profile-menu-subtitle">Saved cards, mobile banking</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
+          <a href="#" onclick="alert('Wishlist coming soon!'); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: var(--primary);">❤️</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">Wishlist</div>
+              <div class="profile-menu-subtitle">Saved favorite items</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+        </div>
+
+        <!-- Menu Group 2 -->
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 8px 0;">
+          <a href="/#faq" onclick="window.routeTo('/'); setTimeout(() => document.getElementById('faq').scrollIntoView(), 100); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: var(--primary);">🛠️</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">Support / Help</div>
+              <div class="profile-menu-subtitle">FAQs, Contact Us, Chat Support</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
+          <a href="#" onclick="logout(); return false;" class="profile-menu-item">
+            <div class="profile-menu-icon" style="color: #ef4444;">🚪</div>
+            <div class="profile-menu-text">
+              <div class="profile-menu-title">Logout</div>
+              <div class="profile-menu-subtitle">Sign out securely</div>
+            </div>
+            <div class="profile-menu-chevron">›</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Edit Profile View -->
+      <div id="profile-edit-view" style="display: none;">
+        <div style="display: flex; align-items: center; margin-bottom: 24px; gap: 16px;">
+          <button class="btn btn-secondary" style="padding: 8px 12px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px;" onclick="showProfileView('dashboard')">‹</button>
+          <h2 style="font-size: 24px; font-weight: 700; margin: 0;">Manage Profile</h2>
+        </div>
+        <div class="card" style="background: var(--surface); padding: 32px; border-radius: 16px; border: 1px solid var(--border);">
+          <form id="profile-form" onsubmit="saveProfile(event)">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+              <div class="order-form-group">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Full Name</label>
+                <input type="text" id="profile-name" class="form-control" style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);" required>
+              </div>
+              <div class="order-form-group">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Phone Number</label>
+                <input type="tel" id="profile-phone" class="form-control" style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);" required disabled title="Phone number cannot be changed">
+              </div>
+              <div class="order-form-group">
+                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Default Delivery Address</label>
+                <textarea id="profile-address" class="form-control" rows="4" style="width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg);"></textarea>
+              </div>
+            </div>
+            <div style="margin-top: 28px;">
+              <button type="submit" class="btn btn-primary" id="profile-save-btn" style="width: 100%; padding: 14px; border-radius: 10px; font-size: 16px;">Save Changes</button>
+            </div>
+            <div id="profile-msg" style="margin-top: 16px; font-size: 14px; font-weight: 500; text-align: center;"></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Orders View -->
+      <div id="profile-orders-view" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <button class="btn btn-secondary" style="padding: 8px 12px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 20px;" onclick="showProfileView('dashboard')">‹</button>
+            <h2 style="font-size: 24px; font-weight: 700; margin: 0;">My Orders</h2>
           </div>
+          <button class="btn btn-secondary" onclick="loadOrderHistory()" style="padding: 6px 16px; border-radius: 20px; font-size: 14px;">Refresh</button>
+        </div>
+        <div class="card" style="background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden;">
           <div style="overflow-x: auto;">
-            <table style="width: 100%; text-align: left; border-collapse: collapse;">
-              <thead>
+            <table style="width: 100%; text-align: left; border-collapse: collapse; min-width: 500px;">
+              <thead style="background: var(--bg);">
                 <tr style="border-bottom: 1px solid var(--border);">
-                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Order ID</th>
-                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Date</th>
-                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Product</th>
-                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Total</th>
-                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Status</th>
+                  <th style="padding: 16px; color: var(--text-muted); font-weight: 500;">Order ID</th>
+                  <th style="padding: 16px; color: var(--text-muted); font-weight: 500;">Date</th>
+                  <th style="padding: 16px; color: var(--text-muted); font-weight: 500;">Product</th>
+                  <th style="padding: 16px; color: var(--text-muted); font-weight: 500;">Total</th>
+                  <th style="padding: 16px; color: var(--text-muted); font-weight: 500;">Status</th>
                 </tr>
               </thead>
               <tbody id="profile-orders-tbody">
@@ -797,6 +878,7 @@
           </div>
         </div>
       </div>
+      
     </div>
   </main>
 
