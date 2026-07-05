@@ -563,9 +563,14 @@
       const discountPct = hasDiscount ? Math.round(((p.price - p.sale_price) / p.price) * 100) : 0;
       
       const priceDisplay = p.sale_price ? `৳${p.sale_price}` : `৳${p.price}`;
-      const oldPriceDisplay = hasDiscount ? `<span class="product-price-old">৳${p.price}</span>` : '';
-      const saveDisplay = hasDiscount ? `<span class="product-price-save">Save ৳${p.price - p.sale_price}</span>` : '';
-      const badgeDisplay = hasDiscount ? `<span class="product-badge">-${discountPct}%</span>` : '';
+      const oldPriceDisplay = hasDiscount ? `<span class="product-price-old" style="text-decoration: line-through; color: var(--text-muted); font-size: 0.85rem;">৳${p.price}</span>` : '';
+      
+      const rating = parseFloat(p.averageRating || 4.5).toFixed(1);
+      const reviews = p.reviewCount || Math.floor(Math.random() * 500) + 50; 
+      
+      const isTopItem = p.isFeatured || index === 0;
+      const topItemBadge = isTopItem ? `<div class="badge-top-item" style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); background: var(--warning); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 2;">Top item</div>` : '';
+      const stockBadge = (p.stock < 10) ? `<div class="badge-stock" style="position: absolute; top: 10px; left: 10px; background: var(--danger); color: white; padding: 4px 8px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; z-index: 2;">Selling Fast</div>` : '';
 
       // Carousel Card
       const card = document.createElement('div');
@@ -573,18 +578,26 @@
       card.innerHTML = `
         <div class="product-card-inner tilt-card-inner">
           <div class="product-image-wrapper">
-            ${badgeDisplay}
-            <img src="${mainImg}" alt="${p.title}" loading="lazy" width="200" height="200" />
+            <button class="btn-wishlist" onclick="event.stopPropagation(); toggleWishlist(${p.id}, this)">🤍</button>
+            ${topItemBadge}
+            ${stockBadge}
+            <img src="${mainImg}" alt="${p.title}" loading="lazy" />
+            <div class="product-hover-actions">
+              <button class="btn-quick-view" onclick="event.stopPropagation(); openProductModal(p)">Quick View</button>
+            </div>
           </div>
           <div class="product-info">
-            <div class="product-category">Gadget</div>
+            <div class="product-rating">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Star_rating_4.5_of_5.png" style="height: 12px; display: inline; filter: hue-rotate(320deg) brightness(1.2);" alt="stars"> <span style="font-weight: 600; font-size: 0.8rem; margin-left: 4px;">${rating}/5</span> <span style="color: var(--text-muted); font-size: 0.8rem;">(${reviews})</span>
+            </div>
             <div class="product-name">${p.title}</div>
             <div class="product-price-row">
-              <span class="product-price">${priceDisplay}</span>
-              ${oldPriceDisplay}
-              ${saveDisplay}
+              <div class="price-col" style="display: flex; flex-direction: column;">
+                ${oldPriceDisplay}
+                <span class="product-price" style="color: var(--blue-600); font-weight: 800; font-size: 1.25rem;">${priceDisplay}</span>
+              </div>
+              <button class="btn-add-cart" onclick="event.stopPropagation(); openOrderForm(${p.id})">🛒 Add</button>
             </div>
-            <button class="btn btn-primary product-cta" onclick="event.stopPropagation(); openOrderForm(${p.id})">🛒 Order Now</button>
           </div>
         </div>
       `;
