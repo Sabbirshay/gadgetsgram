@@ -25,6 +25,9 @@ export class SupabaseService {
   }
 
   getClient(): SupabaseClient {
+    if (!this.supabase) {
+      throw new Error('Supabase client is not initialized. Check SUPABASE_URL and SUPABASE_KEY environment variables.');
+    }
     return this.supabase;
   }
 }
