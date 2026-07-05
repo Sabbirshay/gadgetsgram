@@ -229,6 +229,50 @@
     }
   }
 
+  window.openProfile = function(e) {
+    if (e) e.preventDefault();
+    if (!localStorage.getItem('gg_token')) {
+      openAuthModal();
+      return;
+    }
+    window.routeTo('/profile');
+    if (typeof loadOrderHistory === 'function') loadOrderHistory();
+  };
+
+  window.openCart = function(e) {
+    if (e) e.preventDefault();
+    if (typeof cartItem !== 'undefined' && cartItem) {
+      openOrderForm(cartItem.id);
+    } else {
+      alert('Your cart is empty! Add an item first.');
+      const shopTarget = document.getElementById('products');
+      if (shopTarget) shopTarget.scrollIntoView({behavior: 'smooth'});
+    }
+  };
+
+  window.openWishlist = function(e) {
+    if (e) e.preventDefault();
+    if (!localStorage.getItem('gg_token')) {
+      openAuthModal();
+      return;
+    }
+    
+    // Toggle wishlist filter
+    currentFilters.wishlistOnly = !currentFilters.wishlistOnly;
+    
+    if (currentFilters.wishlistOnly) {
+      alert('Filtering products to show only your Favourites.');
+    }
+    
+    applyFilters();
+    const shopTarget = document.getElementById('products');
+    if (shopTarget) {
+      // Small delay to ensure route reset if they were on another page
+      window.routeTo('/');
+      setTimeout(() => shopTarget.scrollIntoView({behavior: 'smooth'}), 100);
+    }
+  };
+
   window.logout = function() {
     localStorage.removeItem('gg_token');
     localStorage.removeItem('gg_user');
@@ -599,7 +643,14 @@
       const res = await fetch(`${API_BASE}/api/v1/products?${params.toString()}`);
       if (res.ok) {
         const json = await res.json();
-        globalProducts = json.data || json;
+        let products = json.data || json;
+        
+        if (currentFilters.wishlistOnly) {
+          products = products.filter(p => userWishlist.includes(p.id));
+        }
+        
+        globalProducts = products;
+        
         if (resultsCount) resultsCount.textContent = `Showing ${globalProducts.length} results`;
         
         if (globalProducts.length === 0 && carousel) {
@@ -607,7 +658,7 @@
             <div class="products-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
               <div style="font-size: 40px; margin-bottom: 10px;">🔍</div>
               <h3>No products found</h3>
-              <p>Try adjusting your filters or search criteria.</p>
+              <p>${currentFilters.wishlistOnly ? 'Your Favourites list is empty.' : 'Try adjusting your filters or search criteria.'}</p>
               <button class="btn btn-secondary" onclick="resetFilters()" style="margin-top:10px;">Clear Filters</button>
             </div>
           `;
