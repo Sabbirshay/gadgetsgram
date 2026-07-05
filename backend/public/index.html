@@ -112,7 +112,7 @@
       <span class="icon">🏠</span>
       <span class="label">Home</span>
     </a>
-    <a href="#search" class="bottom-bar-item">
+    <a href="#" class="bottom-bar-item" onclick="event.preventDefault(); toggleMobileFilter(); document.getElementById('mobile-search-input').focus();">
       <span class="icon">🔍</span>
       <span class="label">Search</span>
     </a>
@@ -357,32 +357,91 @@
   <!-- ═══════════════════════════════════════════════════════════════
        SECTION 4: PRODUCT SHOWCASE
        ═══════════════════════════════════════════════════════════════ -->
-  <section class="section products-section" id="products">
+  <section class="section products-section" id="products" style="background: var(--bg-primary);">
     <div class="container">
-      <div style="text-align:center;" class="reveal">
-        <span class="section-label">Our Products</span>
+      <div style="text-align:center; margin-bottom: 2rem;" class="reveal">
         <h2 class="section-title">
-          Featured <span class="text-gradient">Gadgets</span>
+          Shop <span class="text-gradient">All Gadgets</span>
         </h2>
-        <p class="section-subtitle bengali" style="margin:0 auto; color: var(--orange-400);">
-          আমাদের জনপ্রিয় পণ্যসমূহ
-        </p>
       </div>
 
-      <div class="products-carousel-wrapper">
-        <div class="products-carousel" id="products-carousel">
-          <!-- Loading State -->
-          <div class="products-loading-state" id="products-loader">
-            <div class="spinner"></div>
-            <p>Loading premium gadgets...</p>
+      <div class="shop-container">
+        <!-- Sidebar Filter -->
+        <aside class="filter-sidebar" id="filter-sidebar">
+          <div class="filter-header">
+            <h3>Filters</h3>
+            <button class="btn-close-filter" onclick="toggleMobileFilter()">✕</button>
           </div>
-        </div>
+          
+          <div class="filter-group mobile-search-only" style="display: none; margin-bottom: 20px;">
+            <div class="search-input-wrapper" style="position: relative;">
+              <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 14px;">🔍</span>
+              <input type="text" id="mobile-search-input" placeholder="Search gadgets..." style="width: 100%; padding: 10px 10px 10px 36px; border: 1px solid var(--border-glass); border-radius: var(--radius-lg); background: var(--bg-surface-alt); color: var(--text-primary); font-family: var(--font-body);">
+            </div>
+          </div>
 
-        <!-- Carousel Navigation -->
-        <div class="carousel-nav">
-          <button class="carousel-btn" id="carousel-prev" aria-label="Previous product">◀</button>
-          <button class="carousel-btn" id="carousel-next" aria-label="Next product">▶</button>
-        </div>
+          <div class="filter-group">
+            <h4>Category</h4>
+            <div class="filter-options">
+              <label class="filter-label"><input type="radio" name="category" value="" checked onchange="applyFilters()"> All Categories</label>
+              <label class="filter-label"><input type="radio" name="category" value="Audio" onchange="applyFilters()"> Audio</label>
+              <label class="filter-label"><input type="radio" name="category" value="Wearable" onchange="applyFilters()"> Smart Watches</label>
+              <label class="filter-label"><input type="radio" name="category" value="Accessory" onchange="applyFilters()"> Accessories</label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4>Brand</h4>
+            <div class="filter-options" id="brand-filters">
+              <label class="filter-label"><input type="checkbox" value="Apple" class="brand-cb" onchange="applyFilters()"> Apple</label>
+              <label class="filter-label"><input type="checkbox" value="Samsung" class="brand-cb" onchange="applyFilters()"> Samsung</label>
+              <label class="filter-label"><input type="checkbox" value="Xiaomi" class="brand-cb" onchange="applyFilters()"> Xiaomi</label>
+              <label class="filter-label"><input type="checkbox" value="Sony" class="brand-cb" onchange="applyFilters()"> Sony</label>
+              <label class="filter-label"><input type="checkbox" value="JBL" class="brand-cb" onchange="applyFilters()"> JBL</label>
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <h4>Price Range (৳)</h4>
+            <div class="price-inputs">
+              <input type="number" id="minPrice" placeholder="Min" onchange="applyFilters()">
+              <span style="color:var(--text-muted)">-</span>
+              <input type="number" id="maxPrice" placeholder="Max" onchange="applyFilters()">
+            </div>
+          </div>
+          
+          <button class="btn btn-primary" style="width:100%; margin-top:20px;" onclick="applyFilters(); toggleMobileFilter()">Apply Filters</button>
+        </aside>
+
+        <!-- Main Products Area -->
+        <main class="shop-main">
+          <!-- Top Sort Bar -->
+          <div class="shop-top-bar">
+            <button class="btn-mobile-filter" onclick="toggleMobileFilter()">
+              <span>⚙️</span> Filters
+            </button>
+            <div class="shop-results-count" id="results-count">Loading...</div>
+            <div class="shop-sort">
+              <select id="sortSelect" onchange="applyFilters()">
+                <option value="newest">Newest Arrivals</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating">Top Rated</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Product Grid -->
+          <div class="products-carousel-wrapper" style="margin-top: 0;">
+            <div class="products-carousel" id="products-carousel">
+              <!-- Loading State -->
+              <div class="products-loading-state" id="products-loader">
+                <div class="spinner"></div>
+                <p>Loading premium gadgets...</p>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   </section>

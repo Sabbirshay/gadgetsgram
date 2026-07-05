@@ -507,13 +507,103 @@
      ══════════════════════════════════════════════════════════════ */
   let globalProducts = [];
 
+  let currentFilters = {
+    search: '',
+    category: '',
+    brand: [],
+    minPrice: '',
+    maxPrice: '',
+    sort: 'newest'
+  };
+
+  window.toggleMobileFilter = function() {
+    const sidebar = document.getElementById('filter-sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('open');
+    }
+  };
+
+  window.applyFilters = function(skipSearchInputUpdate = false) {
+    const categoryEl = document.querySelector('input[name="category"]:checked');
+    currentFilters.category = categoryEl ? categoryEl.value : '';
+
+    const brandEls = document.querySelectorAll('.brand-cb:checked');
+    currentFilters.brand = Array.from(brandEls).map(cb => cb.value);
+
+    const minPriceEl = document.getElementById('minPrice');
+    currentFilters.minPrice = minPriceEl ? minPriceEl.value : '';
+
+    const maxPriceEl = document.getElementById('maxPrice');
+    currentFilters.maxPrice = maxPriceEl ? maxPriceEl.value : '';
+
+    const sortEl = document.getElementById('sortSelect');
+    currentFilters.sort = sortEl ? sortEl.value : 'newest';
+
+    loadProducts();
+  };
+
+  window.resetFilters = function() {
+    const searchInput = document.querySelector('#desktop-search input');
+    if (searchInput) searchInput.value = '';
+    currentFilters.search = '';
+    
+    const defaultCat = document.querySelector('input[name="category"][value=""]');
+    if (defaultCat) defaultCat.checked = true;
+    
+    document.querySelectorAll('.brand-cb').forEach(cb => cb.checked = false);
+    
+    const minPriceEl = document.getElementById('minPrice');
+    if (minPriceEl) minPriceEl.value = '';
+    
+    const maxPriceEl = document.getElementById('maxPrice');
+    if (maxPriceEl) maxPriceEl.value = '';
+    
+    const sortEl = document.getElementById('sortSelect');
+    if (sortEl) sortEl.value = 'newest';
+    
+    applyFilters();
+  };
+
   async function loadProducts() {
     const carousel = document.getElementById('products-carousel');
+    const resultsCount = document.getElementById('results-count');
+    
+    if (carousel) {
+      carousel.innerHTML = `
+        <div class="products-loading-state" id="products-loader" style="grid-column: 1 / -1;">
+          <div class="spinner"></div>
+          <p>Loading gadgets...</p>
+        </div>
+      `;
+    }
+
     try {
-      const res = await fetch(API_BASE + '/api/v1/products');
+      const params = new URLSearchParams();
+      if (currentFilters.search) params.append('search', currentFilters.search);
+      if (currentFilters.category) params.append('category', currentFilters.category);
+      if (currentFilters.brand.length > 0) params.append('brand', currentFilters.brand.join(','));
+      if (currentFilters.minPrice) params.append('minPrice', currentFilters.minPrice);
+      if (currentFilters.maxPrice) params.append('maxPrice', currentFilters.maxPrice);
+      if (currentFilters.sort) params.append('sort', currentFilters.sort);
+
+      const res = await fetch(`${API_BASE}/api/v1/products?${params.toString()}`);
       if (res.ok) {
         const json = await res.json();
         globalProducts = json.data || json;
+        if (resultsCount) resultsCount.textContent = \`Showing \${globalProducts.length} results\`;
+        
+        if (globalProducts.length === 0 && carousel) {
+          carousel.innerHTML = `
+            <div class="products-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+              <div style="font-size: 40px; margin-bottom: 10px;">🔍</div>
+              <h3>No products found</h3>
+              <p>Try adjusting your filters or search criteria.</p>
+              <button class="btn btn-secondary" onclick="resetFilters()" style="margin-top:10px;">Clear Filters</button>
+            </div>
+          `;
+          return;
+        }
+        
         renderProducts(globalProducts);
       } else {
         throw new Error('Failed to fetch products');
@@ -522,22 +612,14 @@
       console.error('Failed to load products', err);
       if (carousel) {
         carousel.innerHTML = `
-          <div class="products-error-state">
+          <div class="products-error-state" style="grid-column: 1 / -1; text-align: center;">
             <p class="error-msg">⚠️ Failed to load products. The server might be warming up. Please try again.</p>
-            <button class="btn btn-primary retry-btn" id="retry-load-products-btn">🔄 Retry Loading</button>
+            <button class="btn btn-primary retry-btn" id="retry-load-products-btn">🔄 Retry</button>
           </div>
         `;
         const retryBtn = document.getElementById('retry-load-products-btn');
         if (retryBtn) {
-          retryBtn.addEventListener('click', () => {
-            carousel.innerHTML = `
-              <div class="products-loading-state" id="products-loader">
-                <div class="spinner"></div>
-                <p>Loading premium gadgets...</p>
-              </div>
-            `;
-            loadProducts();
-          });
+          retryBtn.addEventListener('click', loadProducts);
         }
       }
     }
@@ -1176,5 +1258,28 @@
       btn.innerText = 'Track';
     }
   };
+
+  let searchTimeout = null;
+  const searchInput = document.querySelector('#desktop-search input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentFilters.search = e.target.value;
+        applyFilters(true);
+      }, 400);
+    });
+  }
+
+  const mobileSearchInput = document.getElementById('mobile-search-input');
+  if (mobileSearchInput) {
+    mobileSearchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentFilters.search = e.target.value;
+        applyFilters(true);
+      }, 400);
+    });
+  }
 
 })();
