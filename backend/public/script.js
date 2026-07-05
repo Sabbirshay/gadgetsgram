@@ -600,7 +600,7 @@
       if (res.ok) {
         const json = await res.json();
         globalProducts = json.data || json;
-        if (resultsCount) resultsCount.textContent = \`Showing \${globalProducts.length} results\`;
+        if (resultsCount) resultsCount.textContent = `Showing ${globalProducts.length} results`;
         
         if (globalProducts.length === 0 && carousel) {
           carousel.innerHTML = `
