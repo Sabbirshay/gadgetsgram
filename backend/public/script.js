@@ -146,8 +146,9 @@
 
         if (res.ok) {
           const data = await res.json();
+          const orderData = data.data || data;
           form.reset();
-          window.routeTo('/order/success?id=' + data.orderId);
+          window.routeTo('/order/success?id=' + orderData.orderId);
         } else {
           throw new Error('Failed to submit');
         }
@@ -270,9 +271,10 @@
         const data = await res.json();
         
         if (res.ok) {
+          const resData = data.data || data;
           if (authMode === 'login') {
-            localStorage.setItem('gg_token', data.accessToken);
-            localStorage.setItem('gg_user', JSON.stringify(data.user));
+            localStorage.setItem('gg_token', resData.accessToken);
+            localStorage.setItem('gg_user', JSON.stringify(resData.user));
             updateAuthUI();
             closeAuthModal();
             form.reset();
