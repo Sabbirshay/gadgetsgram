@@ -44,24 +44,48 @@
     const searchParams = new URLSearchParams(window.location.search);
     
     const allSections = document.querySelectorAll('section');
+    const allMains = document.querySelectorAll('main');
     const successSection = document.getElementById('success-screen');
     const footer = document.getElementById('footer');
     
+    // Hide all views first
+    allMains.forEach(main => main.style.display = 'none');
+    allSections.forEach(sec => {
+      if (sec.id !== 'success-screen') sec.style.display = 'none';
+    });
+    if (successSection) successSection.style.display = 'none';
+
     if (path.startsWith('/order/success')) {
       const orderId = searchParams.get('id');
       document.getElementById('success-order-id').textContent = orderId || 'GG-XXXX';
-      
-      // Hide other sections, show success
-      allSections.forEach(sec => sec.style.display = 'none');
       if (successSection) successSection.style.display = 'flex';
       if (footer) footer.style.display = 'none';
       window.scrollTo(0, 0);
+    } else if (path.startsWith('/profile')) {
+      const profileView = document.getElementById('profile-view');
+      if (profileView) profileView.style.display = 'block';
+      if (footer) footer.style.display = '';
+      window.scrollTo(0, 0);
+      openProfile();
+    } else if (path.startsWith('/track')) {
+      const trackingView = document.getElementById('tracking-view');
+      if (trackingView) trackingView.style.display = 'block';
+      if (footer) footer.style.display = '';
+      
+      const orderId = searchParams.get('id');
+      if (orderId) {
+        document.getElementById('tracking-id').value = orderId;
+        // Trigger tracking automatically if ID exists
+        setTimeout(() => document.getElementById('tracking-btn').click(), 100);
+      }
+      window.scrollTo(0, 0);
     } else {
       // Home route
+      const homeView = document.getElementById('home-view');
+      if (homeView) homeView.style.display = 'block';
       allSections.forEach(sec => {
         if (sec.id !== 'success-screen') sec.style.display = '';
       });
-      if (successSection) successSection.style.display = 'none';
       if (footer) footer.style.display = '';
     }
   }
@@ -144,11 +168,7 @@
   window.openAuthModal = function(e) {
     if (e) e.preventDefault();
     if (localStorage.getItem('gg_token')) {
-      localStorage.removeItem('gg_token');
-      localStorage.removeItem('gg_user');
-      updateAuthUI();
-      document.getElementById('order-name').value = '';
-      document.getElementById('order-phone').value = '';
+      window.routeTo('/profile');
       return;
     }
     document.getElementById('auth-overlay').classList.add('active');
@@ -190,7 +210,7 @@
       if (token) {
         let name = 'User';
         try { name = JSON.parse(userStr).name.split(' ')[0]; } catch(e) {}
-        link.innerText = 'Profile (' + name + ') - Logout';
+        link.innerText = '👤 Profile (' + name + ')';
       } else {
         link.innerText = 'Login';
       }
@@ -207,6 +227,15 @@
       } catch(e) {}
     }
   }
+
+  window.logout = function() {
+    localStorage.removeItem('gg_token');
+    localStorage.removeItem('gg_user');
+    updateAuthUI();
+    document.getElementById('order-name').value = '';
+    document.getElementById('order-phone').value = '';
+    window.routeTo('/');
+  };
 
   function initAuthForm() {
     const form = document.getElementById('auth-form');
@@ -899,5 +928,210 @@
     sticky.style.transform = 'translateY(100%)';
     sticky.style.transition = 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     12. PROFILE & TRACKING
+     ══════════════════════════════════════════════════════════════ */
+  window.openProfile = async function() {
+    const token = localStorage.getItem('gg_token');
+    if (!token) {
+      window.routeTo('/');
+      openAuthModal();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/customers/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Unauthorized');
+      
+      const json = await res.json();
+      const profile = json.data || json;
+      
+      document.getElementById('profile-name').value = profile.name || '';
+      document.getElementById('profile-phone').value = profile.phone || '';
+      document.getElementById('profile-address').value = profile.address || '';
+      
+      loadOrderHistory(profile.orders || []);
+    } catch (err) {
+      console.error(err);
+      localStorage.removeItem('gg_token');
+      window.routeTo('/');
+      openAuthModal();
+    }
+  };
+
+  window.saveProfile = async function(e) {
+    e.preventDefault();
+    const token = localStorage.getItem('gg_token');
+    const name = document.getElementById('profile-name').value;
+    const address = document.getElementById('profile-address').value;
+    const msg = document.getElementById('profile-msg');
+    const btn = document.getElementById('profile-save-btn');
+    
+    msg.innerText = '';
+    btn.disabled = true;
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/customers/profile`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ name, address })
+      });
+      
+      if (res.ok) {
+        msg.innerText = 'Profile updated successfully!';
+        msg.style.color = 'var(--success)';
+        // Update nav text if name changed
+        const authLink = document.getElementById('nav-auth-link');
+        if (authLink) {
+          authLink.innerHTML = `👤 Profile (${name.split(' ')[0]}) - Logout`;
+        }
+      } else {
+        throw new Error('Failed to update');
+      }
+    } catch (err) {
+      msg.innerText = 'Update failed. Please try again.';
+      msg.style.color = 'var(--danger)';
+    } finally {
+      btn.disabled = false;
+      setTimeout(() => msg.innerText = '', 3000);
+    }
+  };
+
+  window.loadOrderHistory = async function(ordersData) {
+    let orders = ordersData;
+    if (!orders) {
+      const token = localStorage.getItem('gg_token');
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/customers/profile`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const json = await res.json();
+        orders = (json.data || json).orders || [];
+      } catch (err) {
+        return;
+      }
+    }
+    
+    const tbody = document.getElementById('profile-orders-tbody');
+    if (!tbody) return;
+    
+    if (orders.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 24px;">No orders found. <a href="/#products" onclick="window.routeTo('/'); return false;" style="color: var(--primary);">Shop now</a></td></tr>`;
+      return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    // Sort descending by created_at
+    orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    orders.forEach(order => {
+      const d = new Date(order.created_at);
+      const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const productTitle = order.product ? order.product.title : 'Product Removed';
+      
+      const statusColors = {
+        pending: '#b45309', confirmed: '#1d4ed8', packed: '#4338ca', courier_booked: '#be185d',
+        in_transit: '#92400e', delivered: '#15803d', returned: '#b91c1c', cancelled: '#475569'
+      };
+      const statusBg = {
+        pending: '#fef3c7', confirmed: '#dbeafe', packed: '#e0e7ff', courier_booked: '#fce7f3',
+        in_transit: '#fef3c7', delivered: '#dcfce3', returned: '#fee2e2', cancelled: '#f1f5f9'
+      };
+      
+      const stColor = statusColors[order.status] || '#475569';
+      const stBg = statusBg[order.status] || '#f1f5f9';
+      const statusLabel = order.status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      
+      tbody.innerHTML += `
+        <tr style="border-bottom: 1px solid var(--border);">
+          <td style="padding: 16px 8px; font-weight: 500;">
+            <a href="/track?id=${order.orderId || ''}" onclick="window.routeTo('/track?id=${order.orderId || ''}'); return false;" style="color: var(--primary); text-decoration: none;">
+              ${order.orderId || ('#' + order.id)}
+            </a>
+          </td>
+          <td style="padding: 16px 8px; color: var(--text-muted); font-size: 14px;">${dateStr}</td>
+          <td style="padding: 16px 8px;">${productTitle} <span style="color: var(--text-muted); font-size: 12px;">x${order.quantity}</span></td>
+          <td style="padding: 16px 8px; font-weight: 600;">৳${order.subtotal}</td>
+          <td style="padding: 16px 8px;">
+            <span style="background: ${stBg}; color: ${stColor}; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+              ${statusLabel}
+            </span>
+          </td>
+        </tr>
+      `;
+    });
+  };
+
+  window.trackOrder = async function(e) {
+    if(e) e.preventDefault();
+    const id = document.getElementById('tracking-id').value.trim();
+    const resultDiv = document.getElementById('tracking-result');
+    const btn = document.getElementById('tracking-btn');
+    
+    if (!id) return;
+    
+    btn.disabled = true;
+    btn.innerText = '...';
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div style="text-align: center; padding: 20px;">Fetching status...</div>';
+    
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/orders/track/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) throw new Error('Order not found. Please check your Order ID.');
+        throw new Error('Failed to track order.');
+      }
+      const data = await res.json();
+      const order = data.data || data;
+      
+      // Build timeline
+      let timelineHtml = '<div style="margin-top: 24px;">';
+      if (order.statusHistory && order.statusHistory.length > 0) {
+        order.statusHistory.forEach((sh, idx) => {
+          const isLast = idx === order.statusHistory.length - 1;
+          const d = new Date(sh.changed_at);
+          const time = d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true });
+          const label = sh.to_status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          
+          timelineHtml += `
+            <div style="display: flex; gap: 16px; margin-bottom: ${isLast ? '0' : '20px'}; position: relative;">
+              ${!isLast ? '<div style="position: absolute; left: 11px; top: 24px; bottom: -20px; width: 2px; background: var(--border);"></div>' : ''}
+              <div style="width: 24px; height: 24px; border-radius: 50%; background: ${isLast ? 'var(--primary)' : 'var(--bg)'}; border: 2px solid var(--primary); flex-shrink: 0; z-index: 1;"></div>
+              <div>
+                <div style="font-weight: 600; color: ${isLast ? 'var(--text)' : 'var(--text-muted)'};">${label}</div>
+                <div style="font-size: 13px; color: var(--text-muted);">${time}</div>
+              </div>
+            </div>
+          `;
+        });
+      } else {
+        timelineHtml += '<p>Order is pending.</p>';
+      }
+      timelineHtml += '</div>';
+      
+      const productTitle = order.product ? order.product.title : 'Product';
+      
+      resultDiv.innerHTML = `
+        <div style="border-top: 1px solid var(--border); margin-top: 24px; padding-top: 24px;">
+          <h3 style="font-size: 18px; margin-bottom: 12px;">Order <strong>${order.orderId}</strong></h3>
+          <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Item: <span style="color: var(--text);">${productTitle}</span> (Qty: ${order.quantity})</div>
+          <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">Total: <span style="color: var(--text); font-weight: 600;">৳${order.subtotal}</span></div>
+          ${timelineHtml}
+        </div>
+      `;
+    } catch (err) {
+      resultDiv.innerHTML = `<div style="text-align: center; padding: 20px; color: var(--danger);">${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+      btn.innerText = 'Track';
+    }
+  };
 
 })();

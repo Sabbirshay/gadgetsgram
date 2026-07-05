@@ -17,6 +17,12 @@ export class OrdersController {
     return { success: true, orderId: order.orderId };
   }
 
+  @Public()
+  @Get('track/:orderId')
+  async trackOrder(@Param('orderId') orderId: string) {
+    return this.ordersService.findByOrderId(orderId);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.CUSTOMER_SUPPORT)
   @Get()

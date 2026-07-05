@@ -22,6 +22,9 @@ export class Customer {
   @Column({ nullable: true })
   email: string;
 
+  @Column({ nullable: true, type: 'text' })
+  address: string;
+
   @Column({ nullable: true, unique: true })
   uid: string;
 

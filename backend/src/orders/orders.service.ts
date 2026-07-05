@@ -144,6 +144,30 @@ export class OrdersService {
     return order;
   }
 
+  async findByOrderId(orderId: string) {
+    const order = await this.orderRepository.findOne({
+      where: { orderId },
+      relations: { statusHistory: true, product: true },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    
+    // Sort status history
+    if (order.statusHistory) {
+      order.statusHistory.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+    }
+    
+    // For tracking, we don't need to return full customer PII, but we return safe fields
+    return {
+      orderId: order.orderId,
+      status: order.status,
+      created_at: order.created_at,
+      product: order.product ? { title: order.product.title } : null,
+      quantity: order.quantity,
+      subtotal: order.subtotal,
+      statusHistory: order.statusHistory,
+    };
+  }
+
   async updateStatus(id: number, status: OrderStatus) {
     const order = await this.findOne(id);
     const oldStatus = order.status;

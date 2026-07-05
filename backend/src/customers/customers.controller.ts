@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -26,6 +26,12 @@ export class CustomersController {
   @Get('profile')
   async getProfile(@Request() req: any) {
     return this.customersService.getProfile(req.user.id);
+  }
+
+  @UseGuards(SupabaseAuthGuard)
+  @Put('profile')
+  async updateProfile(@Request() req: any, @Body() body: any) {
+    return this.customersService.updateProfile(req.user.id, body);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

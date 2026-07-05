@@ -69,8 +69,21 @@ export class CustomersService {
   async getProfile(uid: string) {
     return this.customerRepository.findOne({
       where: { uid },
-      relations: { orders: true },
+      relations: { orders: { product: true } },
     });
+  }
+
+  async updateProfile(uid: string, updateDto: any) {
+    const customer = await this.customerRepository.findOne({ where: { uid } });
+    if (!customer) {
+      throw new BadRequestException('Customer not found');
+    }
+    
+    if (updateDto.name !== undefined) customer.name = updateDto.name;
+    if (updateDto.phone !== undefined) customer.phone = updateDto.phone;
+    if (updateDto.address !== undefined) customer.address = updateDto.address;
+
+    return this.customerRepository.save(customer);
   }
 
   async findAll() {

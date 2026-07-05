@@ -115,6 +115,7 @@
   <!-- ═══════════════════════════════════════════════════════════════
        SECTION 1: HERO
        ═══════════════════════════════════════════════════════════════ -->
+  <main id="home-view">
   <section class="hero" id="hero">
     <!-- Three.js Canvas -->
     <canvas id="hero-3d-canvas"></canvas>
@@ -733,6 +734,110 @@
           <div class="trust-icon">🛡️</div>
           <div>Official Warranty</div>
         </div>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PROFILE VIEW
+       ═══════════════════════════════════════════════════════════════ -->
+  <main id="profile-view" style="display: none; padding-top: 100px; padding-bottom: 60px;">
+    <div class="container">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="font-size: 32px; font-weight: 700;">My Profile</h2>
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr; gap: 32px;">
+        <!-- Profile Form -->
+        <div class="card" style="background: var(--surface); padding: 32px; border-radius: 12px; border: 1px solid var(--border);">
+          <h3 style="margin-bottom: 20px; font-size: 20px;">Personal Information</h3>
+          <form id="profile-form" onsubmit="saveProfile(event)">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div class="order-form-group" style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px;">Full Name</label>
+                <input type="text" id="profile-name" class="form-control" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);" required>
+              </div>
+              <div class="order-form-group" style="margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px;">Phone Number</label>
+                <input type="tel" id="profile-phone" class="form-control" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);" required disabled title="Phone number cannot be changed">
+              </div>
+              <div class="order-form-group" style="grid-column: 1 / -1; margin-bottom: 16px;">
+                <label style="display: block; margin-bottom: 8px;">Default Address</label>
+                <textarea id="profile-address" class="form-control" rows="3" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);"></textarea>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary" id="profile-save-btn">Save Changes</button>
+            <span id="profile-msg" style="margin-left: 12px; font-size: 14px; font-weight: 500;"></span>
+          </form>
+        </div>
+
+        <!-- Order History -->
+        <div class="card" style="background: var(--surface); padding: 32px; border-radius: 12px; border: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-size: 20px;">Order History</h3>
+            <button class="btn btn-secondary" onclick="loadOrderHistory()" style="padding: 6px 12px; font-size: 14px;">Refresh</button>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; text-align: left; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Order ID</th>
+                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Date</th>
+                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Product</th>
+                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Total</th>
+                  <th style="padding: 12px 8px; color: var(--text-muted); font-weight: 500;">Status</th>
+                </tr>
+              </thead>
+              <tbody id="profile-orders-tbody">
+                <tr><td colspan="5" style="text-align: center; padding: 24px;">Loading orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       TRACKING VIEW
+       ═══════════════════════════════════════════════════════════════ -->
+  <main id="tracking-view" style="display: none; padding-top: 100px; padding-bottom: 60px;">
+    <div class="container" style="max-width: 600px;">
+      <h2 style="font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 8px;">Track Your Order</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 32px;">Enter your order ID below to check the current status.</p>
+      
+      <div style="background: var(--surface); padding: 32px; border-radius: 12px; border: 1px solid var(--border);">
+        <form id="tracking-form" onsubmit="trackOrder(event)" style="display: flex; gap: 12px; margin-bottom: 24px;">
+          <input type="text" id="tracking-id" placeholder="e.g. GG-1001" style="flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);" required>
+          <button type="submit" class="btn btn-primary" id="tracking-btn">Track</button>
+        </form>
+
+        <div id="tracking-result" style="display: none;">
+          <!-- Status injected here -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       ORDER SUCCESS VIEW
+       ═══════════════════════════════════════════════════════════════ -->
+  <section id="success-screen" style="display: none; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; text-align: center; background: var(--bg);">
+    <div style="background: var(--surface); padding: 48px; border-radius: 16px; border: 1px solid var(--border); max-width: 500px; width: 100%;">
+      <div style="font-size: 64px; margin-bottom: 24px;">🎉</div>
+      <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 16px;">Order Placed!</h2>
+      <p style="color: var(--text-muted); margin-bottom: 24px;">Thank you for your purchase. Your order has been successfully placed.</p>
+      
+      <div style="background: var(--bg); border: 1px dashed var(--border); padding: 16px; border-radius: 8px; margin-bottom: 32px;">
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Your Order ID</div>
+        <div id="success-order-id" style="font-size: 24px; font-weight: 700; color: var(--primary);">GG-XXXX</div>
+      </div>
+      
+      <div style="display: flex; gap: 16px; flex-direction: column;">
+        <button class="btn btn-primary btn-lg" onclick="window.routeTo('/track?id=' + document.getElementById('success-order-id').textContent)">Track Order</button>
+        <button class="btn btn-secondary btn-lg" onclick="window.routeTo('/')">Continue Shopping</button>
       </div>
     </div>
   </section>
