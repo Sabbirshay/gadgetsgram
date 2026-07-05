@@ -58,9 +58,11 @@ export class CustomersService {
       throw new UnauthorizedException(error.message);
     }
 
+    const customer = await this.customerRepository.findOne({ where: { uid: data.user.id } });
+
     return {
       accessToken: data.session.access_token,
-      user: data.user,
+      user: customer || data.user,
     };
   }
 

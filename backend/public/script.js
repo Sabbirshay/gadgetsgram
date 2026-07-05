@@ -106,11 +106,17 @@
       };
 
       try {
+        const headers = {
+          'Content-Type': 'application/json'
+        };
+        const token = localStorage.getItem('gg_token');
+        if (token) {
+          headers['Authorization'] = 'Bearer ' + token;
+        }
+
         const res = await fetch(API_BASE + '/api/v1/orders', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: headers,
           body: JSON.stringify(payload)
         });
 
@@ -141,6 +147,8 @@
       localStorage.removeItem('gg_token');
       localStorage.removeItem('gg_user');
       updateAuthUI();
+      document.getElementById('order-name').value = '';
+      document.getElementById('order-phone').value = '';
       return;
     }
     document.getElementById('auth-overlay').classList.add('active');
@@ -175,12 +183,28 @@
 
   function updateAuthUI() {
     const link = document.getElementById('nav-auth-link');
+    const token = localStorage.getItem('gg_token');
+    const userStr = localStorage.getItem('gg_user');
+    
     if (link) {
-      if (localStorage.getItem('gg_token')) {
-        link.innerText = 'Logout';
+      if (token) {
+        let name = 'User';
+        try { name = JSON.parse(userStr).name.split(' ')[0]; } catch(e) {}
+        link.innerText = 'Profile (' + name + ') - Logout';
       } else {
         link.innerText = 'Login';
       }
+    }
+
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        const nameInput = document.getElementById('order-name');
+        const phoneInput = document.getElementById('order-phone');
+        
+        if (nameInput && !nameInput.value && user.name) nameInput.value = user.name;
+        if (phoneInput && !phoneInput.value && user.phone) phoneInput.value = user.phone;
+      } catch(e) {}
     }
   }
 
