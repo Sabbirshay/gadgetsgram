@@ -232,7 +232,16 @@
   window.logout = function() {
     localStorage.removeItem('gg_token');
     localStorage.removeItem('gg_user');
+    
+    // Clear state
+    if (typeof userWishlist !== 'undefined') userWishlist = [];
+    localStorage.removeItem('gg_cart');
+    if (typeof cartItem !== 'undefined') cartItem = null;
+    
     updateAuthUI();
+    if (typeof updateWishlistUI === 'function') updateWishlistUI();
+    if (typeof updateCartUI === 'function') updateCartUI();
+
     document.getElementById('order-name').value = '';
     document.getElementById('order-phone').value = '';
     window.routeTo('/');
@@ -276,6 +285,7 @@
             localStorage.setItem('gg_token', resData.accessToken);
             localStorage.setItem('gg_user', JSON.stringify(resData.user));
             updateAuthUI();
+            if (typeof fetchWishlist === 'function') fetchWishlist();
             closeAuthModal();
             form.reset();
           } else {
@@ -678,7 +688,7 @@
                 ${oldPriceDisplay}
                 <span class="product-price" style="color: var(--blue-600); font-weight: 800; font-size: 1.25rem;">${priceDisplay}</span>
               </div>
-              <button class="btn-add-cart" onclick="event.stopPropagation(); openOrderForm(${p.id})">🛒 Add</button>
+              <button class="btn-add-cart" onclick="addToCart(${p.id}, event)">🛒 Add</button>
             </div>
           </div>
         </div>
@@ -699,6 +709,7 @@
 
     initCarouselNavigation(carousel);
     initModalEvents();
+    if (typeof updateWishlistUI === 'function') updateWishlistUI();
   }
 
   window.changeProductSelection = function() {
@@ -1281,5 +1292,157 @@
       }, 400);
     });
   }
+
+  /* ══════════════════════════════════════════════════════════════
+     7. STATE MANAGEMENT (WISHLIST & CART)
+     ══════════════════════════════════════════════════════════════ */
+  let userWishlist = [];
+  let cartItem = null;
+
+  window.fetchWishlist = async function() {
+    const token = localStorage.getItem('gg_token');
+    if (!token) {
+      updateWishlistUI();
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/customers/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const profile = json.data || json;
+        if (profile.wishlist) {
+          userWishlist = profile.wishlist.map(w => w.id);
+          updateWishlistUI();
+        }
+      }
+    } catch (e) {
+      console.error('Error fetching wishlist', e);
+    }
+  };
+
+  window.toggleWishlist = async function(productId, btn) {
+    const token = localStorage.getItem('gg_token');
+    if (!token) {
+      openAuthModal();
+      return;
+    }
+
+    try {
+      const isWishlisted = userWishlist.includes(productId);
+      const method = isWishlisted ? 'DELETE' : 'POST';
+      const endpoint = isWishlisted 
+        ? `${API_BASE}/api/v1/customers/profile/wishlist/${productId}`
+        : `${API_BASE}/api/v1/customers/profile/wishlist`;
+
+      // Optimistic UI update
+      if (isWishlisted) {
+        userWishlist = userWishlist.filter(id => id !== productId);
+      } else {
+        userWishlist.push(productId);
+      }
+      updateWishlistUI();
+
+      const res = await fetch(endpoint, {
+        method: method,
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: isWishlisted ? null : JSON.stringify({ productId })
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to update wishlist');
+      }
+    } catch (e) {
+      console.error(e);
+      fetchWishlist();
+    }
+  };
+
+  function updateWishlistUI() {
+    // Update all heart buttons
+    const wishlistBtns = document.querySelectorAll('.btn-wishlist');
+    wishlistBtns.forEach(btn => {
+      const match = btn.getAttribute('onclick').match(/toggleWishlist\((\d+)/);
+      if (match && match[1]) {
+        const pId = parseInt(match[1]);
+        if (userWishlist.includes(pId)) {
+          btn.innerHTML = '❤️';
+          btn.style.color = 'red';
+          btn.classList.add('active');
+        } else {
+          btn.innerHTML = '🤍';
+          btn.style.color = 'inherit';
+          btn.classList.remove('active');
+        }
+      }
+    });
+
+    // Update Desktop Nav Badge
+    const navLinks = document.querySelectorAll('.nav-link .nav-label');
+    navLinks.forEach(el => {
+      if(el.innerText.includes('Favourites')) {
+        el.innerText = `Favourites (${userWishlist.length})`;
+      }
+    });
+  }
+
+  window.addToCart = function(productId, e) {
+    if(e) e.stopPropagation();
+    const product = globalProducts.find(p => p.id === productId);
+    if (!product) return;
+    
+    cartItem = product;
+    localStorage.setItem('gg_cart', JSON.stringify(cartItem));
+    updateCartUI();
+    
+    // Auto-open order form after adding
+    openOrderForm(productId);
+  };
+
+  window.openCart = function(e) {
+    if(e) e.preventDefault();
+    if (cartItem) {
+      openOrderForm(cartItem.id);
+    } else {
+      alert("Your cart is empty. Please add a product to order.");
+      const shopSection = document.getElementById('products');
+      if (shopSection) shopSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  function updateCartUI() {
+    const cartSaved = localStorage.getItem('gg_cart');
+    if (cartSaved) {
+      try { cartItem = JSON.parse(cartSaved); } catch(e){}
+    }
+
+    const count = cartItem ? '1' : '0';
+    
+    // Desktop Nav Badge
+    const navCartBadge = document.querySelector('.nav-link[href="#cart"] span:last-child');
+    if(navCartBadge) navCartBadge.innerText = count;
+
+    // Mobile Bottom Bar Badge
+    const mobileCartBadge = document.querySelector('.bottom-bar-item[href="#cart"] .badge');
+    if(mobileCartBadge) mobileCartBadge.innerText = count;
+  }
+
+  // Initialize State
+  fetchWishlist();
+  updateCartUI();
+
+  // Override standard Add to cart button clicks in products
+  window.addEventListener('load', () => {
+    // We already generate the product cards in JS, but let's make sure the Cart icon works
+    const cartLinks = document.querySelectorAll('a[href="#cart"]');
+    cartLinks.forEach(link => {
+      link.addEventListener('click', openCart);
+    });
+  });
 
 })();
