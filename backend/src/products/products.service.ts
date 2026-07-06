@@ -1,4 +1,9 @@
-import { Injectable, OnModuleInit, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -34,7 +39,8 @@ export class ProductsService implements OnModuleInit {
         {
           title: 'Elite Smartwatch Pro',
           slug: 'elite-smartwatch-pro',
-          description: 'Health tracking, calls, and notifications on your wrist.',
+          description:
+            'Health tracking, calls, and notifications on your wrist.',
           price: 4999,
           sale_price: 3999,
           stock: 50,
@@ -92,7 +98,7 @@ export class ProductsService implements OnModuleInit {
 
   async findAll(includeAll = false, query?: any) {
     const qb = this.productRepository.createQueryBuilder('product');
-    
+
     if (!includeAll) {
       qb.where('product.status = :status', { status: ProductStatus.ACTIVE });
     } else {
@@ -101,28 +107,43 @@ export class ProductsService implements OnModuleInit {
 
     if (query) {
       if (query.category) {
-        qb.andWhere('product.category = :category', { category: query.category });
+        qb.andWhere('product.category = :category', {
+          category: query.category,
+        });
       }
       if (query.brand) {
-        const brands = Array.isArray(query.brand) ? query.brand : query.brand.split(',');
+        const brands = Array.isArray(query.brand)
+          ? query.brand
+          : query.brand.split(',');
         qb.andWhere('product.brand IN (:...brands)', { brands });
       }
       if (query.minPrice) {
-        qb.andWhere('product.price >= :minPrice', { minPrice: parseFloat(query.minPrice) });
+        qb.andWhere('product.price >= :minPrice', {
+          minPrice: parseFloat(query.minPrice),
+        });
       }
       if (query.maxPrice) {
-        qb.andWhere('product.price <= :maxPrice', { maxPrice: parseFloat(query.maxPrice) });
+        qb.andWhere('product.price <= :maxPrice', {
+          maxPrice: parseFloat(query.maxPrice),
+        });
       }
       if (query.minRating) {
-        qb.andWhere('product.averageRating >= :minRating', { minRating: parseFloat(query.minRating) });
+        qb.andWhere('product.averageRating >= :minRating', {
+          minRating: parseFloat(query.minRating),
+        });
       }
       if (query.isFeatured) {
-        qb.andWhere('product.isFeatured = :isFeatured', { isFeatured: query.isFeatured === 'true' });
+        qb.andWhere('product.isFeatured = :isFeatured', {
+          isFeatured: query.isFeatured === 'true',
+        });
       }
       if (query.search) {
-        qb.andWhere('(product.title ILIKE :search OR product.description ILIKE :search OR product.brand ILIKE :search)', { search: `%${query.search}%` });
+        qb.andWhere(
+          '(product.title ILIKE :search OR product.description ILIKE :search OR product.brand ILIKE :search)',
+          { search: `%${query.search}%` },
+        );
       }
-      
+
       if (query.sort) {
         switch (query.sort) {
           case 'price_asc':
@@ -143,7 +164,7 @@ export class ProductsService implements OnModuleInit {
       } else {
         qb.orderBy('product.created_at', 'DESC');
       }
-      
+
       if (query.limit) {
         qb.take(parseInt(query.limit, 10));
       }
@@ -161,9 +182,14 @@ export class ProductsService implements OnModuleInit {
   }
 
   async create(createProductDto: any) {
-    const product = this.productRepository.create(createProductDto as Partial<Product>);
+    const product = this.productRepository.create(
+      createProductDto as Partial<Product>,
+    );
     if (!(product as any).slug) {
-      (product as any).slug = (product as any).title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      (product as any).slug = (product as any).title
+        ?.toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
     }
     return this.productRepository.save(product);
   }

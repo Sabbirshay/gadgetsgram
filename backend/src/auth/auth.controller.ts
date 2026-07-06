@@ -1,4 +1,14 @@
-import { Controller, Post, Body, Res, Req, UseGuards, Get, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  UseGuards,
+  Get,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -14,7 +24,11 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
-  private setCookies(response: Response, accessToken: string, refreshToken: string) {
+  private setCookies(
+    response: Response,
+    accessToken: string,
+    refreshToken: string,
+  ) {
     const isProd = this.configService.get('NODE_ENV') === 'production';
     response.cookie('accessToken', accessToken, {
       httpOnly: true,
@@ -33,40 +47,53 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) response: Response) {
-    const { user, accessToken, refreshToken } = await this.authService.login(loginDto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const { user, accessToken, refreshToken } =
+      await this.authService.login(loginDto);
     this.setCookies(response, accessToken, refreshToken);
-    return { message: 'Logged in successfully', user, accessToken }; 
+    return { message: 'Logged in successfully', user, accessToken };
   }
 
   @Public()
   @UseGuards(JwtRefreshAuthGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refreshTokens(@Req() req: any, @Res({ passthrough: true }) response: Response) {
+  async refreshTokens(
+    @Req() req: any,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
     const tokens = await this.authService.refreshTokens(userId, refreshToken);
     this.setCookies(response, tokens.accessToken, tokens.refreshToken);
-    return { message: 'Tokens refreshed successfully', accessToken: tokens.accessToken };
+    return {
+      message: 'Tokens refreshed successfully',
+      accessToken: tokens.accessToken,
+    };
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout(@Req() req: any, @Res({ passthrough: true }) response: Response) {
+  async logout(
+    @Req() req: any,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     // If we have an authorization header or access token cookie, we could extract the user ID
     // but just in case, we definitely clear the cookies.
     response.clearCookie('accessToken');
     response.clearCookie('refreshToken');
-    
+
     try {
-       // Optional: we can extract user id from req.user if they hit this with a valid access token
-       // and nullify it in the DB. This isn't strictly required since clearing cookies logs them out of the browser.
-       if (req.user && req.user.id) {
-         await this.authService.logout(req.user.id);
-       }
-    } catch(e) {}
-    
+      // Optional: we can extract user id from req.user if they hit this with a valid access token
+      // and nullify it in the DB. This isn't strictly required since clearing cookies logs them out of the browser.
+      if (req.user && req.user.id) {
+        await this.authService.logout(req.user.id);
+      }
+    } catch (e) {}
+
     return { message: 'Logged out successfully' };
   }
 }

@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -25,8 +29,10 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    const product = await this.productsService.findOne(createOrderDto.productId);
-    
+    const product = await this.productsService.findOne(
+      createOrderDto.productId,
+    );
+
     if (product.stock < (createOrderDto.quantity || 1)) {
       throw new BadRequestException('Not enough stock available');
     }
@@ -34,10 +40,12 @@ export class OrdersService {
     const price = Number(product.sale_price || product.price);
     const quantity = createOrderDto.quantity || 1;
     const delivery_charge = 60; // Base delivery charge, can be dynamic based on district later
-    const subtotal = (price * quantity) + delivery_charge;
+    const subtotal = price * quantity + delivery_charge;
 
     // Customer Handling
-    let customer = await this.customerRepository.findOne({ where: { phone: createOrderDto.phone } });
+    let customer = await this.customerRepository.findOne({
+      where: { phone: createOrderDto.phone },
+    });
     if (!customer) {
       customer = this.customerRepository.create({
         name: createOrderDto.customerName,
@@ -47,7 +55,7 @@ export class OrdersService {
       });
       await this.customerRepository.save(customer);
     }
-    
+
     // Update Customer Stats
     customer.orders_count += 1;
     customer.lifetime_value = Number(customer.lifetime_value) + subtotal;
@@ -84,7 +92,11 @@ export class OrdersService {
     );
 
     // Reserve stock
-    await this.inventoryService.reserveStock(product.id, quantity, savedOrder.id.toString());
+    await this.inventoryService.reserveStock(
+      product.id,
+      quantity,
+      savedOrder.id.toString(),
+    );
 
     // Emit event for notification service
     this.eventEmitter.emit('order.created', savedOrder);
@@ -93,7 +105,8 @@ export class OrdersService {
   }
 
   async findAll(status?: string, search?: string, dateRange?: string) {
-    const query = this.orderRepository.createQueryBuilder('order')
+    const query = this.orderRepository
+      .createQueryBuilder('order')
       .leftJoinAndSelect('order.statusHistory', 'statusHistory')
       .leftJoinAndSelect('order.product', 'product');
 
@@ -104,24 +117,27 @@ export class OrdersService {
     if (search) {
       query.andWhere(
         '(order.phone LIKE :search OR order.customer_name LIKE :search OR CAST(order.id AS TEXT) = :exactSearch)',
-        { search: `%${search}%`, exactSearch: search }
+        { search: `%${search}%`, exactSearch: search },
       );
     }
 
     if (dateRange) {
       const today = new Date();
       if (dateRange === 'today') {
-        const start = new Date(today.setHours(0,0,0,0));
+        const start = new Date(today.setHours(0, 0, 0, 0));
         query.andWhere('order.created_at >= :start', { start });
       } else if (dateRange === 'yesterday') {
         const start = new Date(today.setDate(today.getDate() - 1));
-        start.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
         const end = new Date(start);
-        end.setHours(23,59,59,999);
-        query.andWhere('order.created_at BETWEEN :start AND :end', { start, end });
+        end.setHours(23, 59, 59, 999);
+        query.andWhere('order.created_at BETWEEN :start AND :end', {
+          start,
+          end,
+        });
       } else if (dateRange === 'this_week') {
         const start = new Date(today.setDate(today.getDate() - today.getDay()));
-        start.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
         query.andWhere('order.created_at >= :start', { start });
       }
     }
@@ -139,7 +155,10 @@ export class OrdersService {
     if (!order) throw new NotFoundException('Order not found');
     // Sort status history by changed_at ascending
     if (order.statusHistory) {
-      order.statusHistory.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+      order.statusHistory.sort(
+        (a, b) =>
+          new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+      );
     }
     return order;
   }
@@ -150,12 +169,15 @@ export class OrdersService {
       relations: { statusHistory: true, product: true },
     });
     if (!order) throw new NotFoundException('Order not found');
-    
+
     // Sort status history
     if (order.statusHistory) {
-      order.statusHistory.sort((a, b) => new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime());
+      order.statusHistory.sort(
+        (a, b) =>
+          new Date(a.changed_at).getTime() - new Date(b.changed_at).getTime(),
+      );
     }
-    
+
     // For tracking, we don't need to return full customer PII, but we return safe fields
     return {
       orderId: order.orderId,
@@ -182,13 +204,20 @@ export class OrdersService {
         to_status: status,
       }),
     );
-    
+
     // Release stock if cancelled or returned (and it wasn't already cancelled/returned)
     if (
       (status === OrderStatus.CANCELLED || status === OrderStatus.RETURNED) &&
-      !(oldStatus === OrderStatus.CANCELLED || oldStatus === OrderStatus.RETURNED)
+      !(
+        oldStatus === OrderStatus.CANCELLED ||
+        oldStatus === OrderStatus.RETURNED
+      )
     ) {
-      await this.inventoryService.releaseStock(order.product_id, order.quantity, order.id.toString());
+      await this.inventoryService.releaseStock(
+        order.product_id,
+        order.quantity,
+        order.id.toString(),
+      );
     }
 
     this.eventEmitter.emit('order.status_updated', updatedOrder);

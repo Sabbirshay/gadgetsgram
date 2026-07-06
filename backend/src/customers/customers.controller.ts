@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -56,13 +67,19 @@ export class CustomersController {
 
   @UseGuards(SupabaseAuthGuard)
   @Post('profile/wishlist/:productId')
-  async addToWishlist(@Request() req: any, @Param('productId', ParseIntPipe) productId: number) {
+  async addToWishlist(
+    @Request() req: any,
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
     return this.customersService.addToWishlist(req.user.id, productId);
   }
 
   @UseGuards(SupabaseAuthGuard)
   @Delete('profile/wishlist/:productId')
-  async removeFromWishlist(@Request() req: any, @Param('productId', ParseIntPipe) productId: number) {
+  async removeFromWishlist(
+    @Request() req: any,
+    @Param('productId', ParseIntPipe) productId: number,
+  ) {
     return this.customersService.removeFromWishlist(req.user.id, productId);
   }
 }

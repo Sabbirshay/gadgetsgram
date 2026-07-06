@@ -1,6 +1,16 @@
 import {
-  Controller, Get, Post, Put, Delete, Param, Body, Query,
-  ParseIntPipe, UseGuards, UseInterceptors, UploadedFile,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+  ParseIntPipe,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -15,12 +25,11 @@ import { UserRole } from '../common/enums';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 
-
 @Controller('products')
 export class ProductsController {
   constructor(
     private readonly productsService: ProductsService,
-    private readonly cloudinaryService: CloudinaryService
+    private readonly cloudinaryService: CloudinaryService,
   ) {}
 
   @Public()
@@ -30,7 +39,12 @@ export class ProductsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.INVENTORY_MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MARKETING,
+    UserRole.INVENTORY_MANAGER,
+  )
   @Get('admin/all')
   async findAllAdmin() {
     return this.productsService.findAll(true); // All products including archived
@@ -68,7 +82,7 @@ export class ProductsController {
     if (!file) {
       throw new BadRequestException('No image file provided');
     }
-    
+
     try {
       const result = await this.cloudinaryService.uploadImage(file);
       return { url: result.secure_url };
@@ -80,7 +94,7 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Put('bulk/status')
-  async bulkUpdateStatus(@Body() body: { ids: number[], status: string }) {
+  async bulkUpdateStatus(@Body() body: { ids: number[]; status: string }) {
     if (!body.ids || !body.status) {
       throw new BadRequestException('Missing ids or status');
     }
@@ -90,7 +104,10 @@ export class ProductsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Put(':id')
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: any) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateProductDto: any,
+  ) {
     return this.productsService.update(id, updateProductDto);
   }
 

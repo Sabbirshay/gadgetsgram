@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
@@ -30,7 +34,9 @@ export class CustomersService {
     }
 
     if (data.user) {
-      let customer = await this.customerRepository.findOne({ where: { phone } });
+      let customer = await this.customerRepository.findOne({
+        where: { phone },
+      });
       if (!customer) {
         customer = this.customerRepository.create({
           uid: data.user.id,
@@ -62,7 +68,9 @@ export class CustomersService {
       throw new UnauthorizedException(error.message);
     }
 
-    const customer = await this.customerRepository.findOne({ where: { uid: data.user.id } });
+    const customer = await this.customerRepository.findOne({
+      where: { uid: data.user.id },
+    });
 
     return {
       accessToken: data.session.access_token,
@@ -82,7 +90,7 @@ export class CustomersService {
     if (!customer) {
       throw new BadRequestException('Customer not found');
     }
-    
+
     if (updateDto.name !== undefined) customer.name = updateDto.name;
     if (updateDto.phone !== undefined) customer.phone = updateDto.phone;
     if (updateDto.address !== undefined) customer.address = updateDto.address;
@@ -97,9 +105,9 @@ export class CustomersService {
   }
 
   async findOne(id: number) {
-    return this.customerRepository.findOne({ 
+    return this.customerRepository.findOne({
       where: { id },
-      relations: { orders: true }
+      relations: { orders: true },
     });
   }
 
@@ -119,11 +127,13 @@ export class CustomersService {
     });
     if (!customer) throw new BadRequestException('Customer not found');
 
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
     if (!product) throw new BadRequestException('Product not found');
 
     // Add if not already in wishlist
-    if (!customer.wishlist.some(p => p.id === productId)) {
+    if (!customer.wishlist.some((p) => p.id === productId)) {
       customer.wishlist.push(product);
       await this.customerRepository.save(customer);
     }
@@ -137,7 +147,7 @@ export class CustomersService {
     });
     if (!customer) throw new BadRequestException('Customer not found');
 
-    customer.wishlist = customer.wishlist.filter(p => p.id !== productId);
+    customer.wishlist = customer.wishlist.filter((p) => p.id !== productId);
     await this.customerRepository.save(customer);
     return customer.wishlist;
   }

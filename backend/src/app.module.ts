@@ -48,25 +48,46 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
       inject: [ConfigService],
       useFactory: (configService: ConfigService): any => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
-        
+
         if (databaseUrl) {
           return {
             type: 'postgres',
             url: databaseUrl,
             ssl: { rejectUnauthorized: false },
             entities: [
-              User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
+              User,
+              Product,
+              Order,
+              OrderStatusHistory,
+              Customer,
+              Notification,
+              CourierShipment,
+              AuditLog,
+              Setting,
+              InventoryTransaction,
             ],
             synchronize: true, // TEMPORARY: bootstrap Postgres tables on first deploy, then set to false
           };
         }
-        
+
         // Fallback to SQLite for local development
         return {
           type: 'better-sqlite3',
-          database: configService.get<string>('DB_DATABASE', './data/gadgets-gram.db'),
+          database: configService.get<string>(
+            'DB_DATABASE',
+            './data/gadgets-gram.db',
+          ),
           entities: [
-            User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
+            User,
+            Product,
+            Order,
+            OrderStatusHistory,
+            Customer,
+            Notification,
+            CourierShipment,
+            AuditLog,
+            Setting,
+            InventoryTransaction,
           ],
           synchronize: true,
         };
@@ -74,19 +95,23 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
     }),
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => [{
-        ttl: configService.get<number>('THROTTLE_TTL', 60000),
-        limit: configService.get<number>('THROTTLE_LIMIT', 100),
-      }],
+      useFactory: (configService: ConfigService) => [
+        {
+          ttl: configService.get<number>('THROTTLE_TTL', 60000),
+          limit: configService.get<number>('THROTTLE_LIMIT', 100),
+        },
+      ],
       inject: [ConfigService],
     }),
     EventEmitterModule.forRoot(),
-    ...(process.env.VERCEL !== '1' ? [
-      ServeStaticModule.forRoot({
-        rootPath: join(__dirname, '..', 'public'),
-        exclude: ['/api/(.*)'],
-      })
-    ] : []),
+    ...(process.env.VERCEL !== '1'
+      ? [
+          ServeStaticModule.forRoot({
+            rootPath: join(__dirname, '..', 'public'),
+            exclude: ['/api/(.*)'],
+          }),
+        ]
+      : []),
     AuthModule,
     OrdersModule,
     ProductsModule,
