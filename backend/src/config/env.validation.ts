@@ -22,6 +22,17 @@ export const envValidationSchema = Joi.object({
     otherwise: Joi.optional(),
   }),
 
+  SUPABASE_URL: Joi.string().when('DB_TYPE', {
+    is: 'postgres',
+    then: Joi.string().required(),
+    otherwise: Joi.optional(),
+  }),
+  SUPABASE_KEY: Joi.string().when('DB_TYPE', {
+    is: 'postgres',
+    then: Joi.string().required(),
+    otherwise: Joi.optional(),
+  }),
+
   ADMIN_EMAIL: Joi.string().email().required(),
   ADMIN_PASSWORD: Joi.string().required(),
 

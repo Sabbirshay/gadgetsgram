@@ -18,9 +18,13 @@ services:
       - key: JWT_REFRESH_EXPIRATION
         value: 7d
       - key: DB_TYPE
-        value: sqlite
-      - key: DB_DATABASE
-        value: ./data/gadgets-gram.db
+        value: postgres
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
       - key: ADMIN_EMAIL
         value: adminroni@gadgetsgram.com
       - key: ADMIN_PASSWORD
@@ -33,7 +37,3 @@ services:
         value: 60000
       - key: THROTTLE_LIMIT
         value: 100
-    disk:
-      name: gadgetsgram-data
-      mountPath: /opt/render/project/src/backend/data
-      sizeGB: 1
