@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { User } from './entities/user.entity';
 import { DatabaseSeederService } from './database-seeder.service';
 
@@ -19,14 +20,14 @@ import { DatabaseSeederService } from './database-seeder.service';
       useFactory: async (configService: ConfigService): Promise<any> => ({
         secret: configService.get<string>('JWT_SECRET', 'super-secret-default-key-change-in-prod'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1d'),
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '15m'), // Access token expires in 15m
         },
       }),
       inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, DatabaseSeederService],
+  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, DatabaseSeederService],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

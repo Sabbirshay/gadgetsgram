@@ -27,6 +27,9 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ nullable: true })
+  hashed_refresh_token: string;
+
   @CreateDateColumn()
   created_at: Date;
 
