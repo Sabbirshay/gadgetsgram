@@ -27,7 +27,7 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   hashed_refresh_token: string | null;
 
   @CreateDateColumn()
