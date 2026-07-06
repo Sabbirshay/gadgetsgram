@@ -49,7 +49,6 @@ import { envValidationSchema } from './config/env.validation';
         const databaseUrl = configService.get<string>('DATABASE_URL');
         
         if (databaseUrl) {
-          const isVercel = process.env.VERCEL === '1';
           return {
             type: 'postgres',
             url: databaseUrl,
@@ -58,7 +57,7 @@ import { envValidationSchema } from './config/env.validation';
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
             migrations: ['dist/migrations/*{.ts,.js}'],
-            migrationsRun: !isVercel, // DO NOT run automatically on Vercel
+            migrationsRun: true, // Let Vercel run migrations since it has IPv6
             synchronize: false, // Disabled for production safety
           };
         }
