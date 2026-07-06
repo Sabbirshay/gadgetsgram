@@ -35,10 +35,13 @@ import { InventoryModule } from './inventory/inventory.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { SupabaseModule } from './supabase/supabase.module';
 
+import { envValidationSchema } from './config/env.validation';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: envValidationSchema,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
