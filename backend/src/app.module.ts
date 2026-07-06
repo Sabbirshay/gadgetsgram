@@ -53,13 +53,11 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
           return {
             type: 'postgres',
             url: databaseUrl,
-            ssl: { rejectUnauthorized: false }, // Render requires SSL
+            ssl: { rejectUnauthorized: false },
             entities: [
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
-            migrations: [InitialSchema1783353166367],
-            migrationsRun: true, // Let Vercel run migrations since it has IPv6
-            synchronize: false, // Disabled for production safety
+            synchronize: true, // TEMPORARY: bootstrap Postgres tables on first deploy, then set to false
           };
         }
         
