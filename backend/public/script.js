@@ -1106,11 +1106,17 @@
     }
   };
 
-  window.openProfile = async function() {
+  window.openProfile = async function(e) {
+    if (e) e.preventDefault();
     const token = localStorage.getItem('gg_token');
     if (!token) {
       window.routeTo('/');
       openAuthModal();
+      return;
+    }
+
+    if (window.location.pathname !== '/profile') {
+      window.routeTo('/profile');
       return;
     }
 

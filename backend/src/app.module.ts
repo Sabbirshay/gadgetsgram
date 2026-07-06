@@ -53,7 +53,9 @@ import { SupabaseModule } from './supabase/supabase.module';
             entities: [
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
-            synchronize: true, // Typically false in prod, but keeping true for automatic schema sync on this project
+            migrations: ['dist/migrations/*{.ts,.js}'],
+            migrationsRun: true, // Automatically run migrations on startup
+            synchronize: false, // Disabled for production safety
           };
         }
         
