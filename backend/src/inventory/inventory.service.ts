@@ -20,34 +20,40 @@ export class InventoryService {
 
   async getSummary() {
     const products = await this.productRepository.find();
-    
+
     // In a real high-scale app, this would be an aggregation query in the database.
     // For this demonstration, we'll fetch transactions and aggregate in memory or use the DB.
-    const summaries = await Promise.all(products.map(async (p) => {
-      const transactions = await this.transactionRepository.find({ where: { product_id: p.id } });
-      
-      let available = p.stock;
-      let reserved = 0;
-      let sold = 0;
-      let returned = 0;
+    const summaries = await Promise.all(
+      products.map(async (p) => {
+        const transactions = await this.transactionRepository.find({
+          where: { product_id: p.id },
+        });
 
-      transactions.forEach(t => {
-        if (t.type === InventoryTransactionType.RESERVED) reserved += t.quantity;
-        if (t.type === InventoryTransactionType.OUT) sold += t.quantity;
-        if (t.type === InventoryTransactionType.RETURNED) returned += t.quantity;
-      });
+        const available = p.stock;
+        let reserved = 0;
+        let sold = 0;
+        let returned = 0;
 
-      return {
-        id: p.id,
-        title: p.title,
-        price: p.price,
-        stock: p.stock,
-        available: p.stock - reserved,
-        reserved,
-        sold,
-        returned
-      };
-    }));
+        transactions.forEach((t) => {
+          if (t.type === InventoryTransactionType.RESERVED)
+            reserved += t.quantity;
+          if (t.type === InventoryTransactionType.OUT) sold += t.quantity;
+          if (t.type === InventoryTransactionType.RETURNED)
+            returned += t.quantity;
+        });
+
+        return {
+          id: p.id,
+          title: p.title,
+          price: p.price,
+          stock: p.stock,
+          available: p.stock - reserved,
+          reserved,
+          sold,
+          returned,
+        };
+      }),
+    );
 
     return summaries;
   }
@@ -58,16 +64,18 @@ export class InventoryService {
       where: {
         // Ideally we would query where stock < threshold directly,
         // but since we want to consider reserved stock, we fetch all or handle appropriately.
-      }
+      },
     });
 
     const summaries = await this.getSummary();
-    const alerts = summaries.filter(s => s.available <= LOW_STOCK_THRESHOLD).map(s => ({
-      product_id: s.id,
-      title: s.title,
-      available: s.available,
-      status: s.available <= 0 ? 'Out of Stock' : 'Low Stock'
-    }));
+    const alerts = summaries
+      .filter((s) => s.available <= LOW_STOCK_THRESHOLD)
+      .map((s) => ({
+        product_id: s.id,
+        title: s.title,
+        available: s.available,
+        status: s.available <= 0 ? 'Out of Stock' : 'Low Stock',
+      }));
 
     return alerts;
   }
@@ -89,7 +97,9 @@ export class InventoryService {
             const notes = row.notes || 'Bulk update';
 
             if (!isNaN(productId) && !isNaN(stockChange)) {
-              const product = await this.productRepository.findOne({ where: { id: productId } });
+              const product = await this.productRepository.findOne({
+                where: { id: productId },
+              });
               if (product) {
                 // Update product stock directly
                 product.stock += stockChange;
@@ -98,9 +108,12 @@ export class InventoryService {
                 // Record transaction
                 await this.transactionRepository.save({
                   product_id: productId,
-                  type: stockChange > 0 ? InventoryTransactionType.IN : InventoryTransactionType.ADJUSTMENT,
+                  type:
+                    stockChange > 0
+                      ? InventoryTransactionType.IN
+                      : InventoryTransactionType.ADJUSTMENT,
                   quantity: Math.abs(stockChange),
-                  notes: notes
+                  notes: notes,
                 });
                 updatedCount++;
               }
@@ -108,12 +121,16 @@ export class InventoryService {
           }
           resolve({ success: true, updatedCount });
         })
-        .on('error', (err) => reject(new BadRequestException('Error parsing CSV: ' + err.message)));
+        .on('error', (err) =>
+          reject(new BadRequestException('Error parsing CSV: ' + err.message)),
+        );
     });
   }
 
   async reserveStock(productId: number, quantity: number, orderId: string) {
-    const product = await this.productRepository.findOne({ where: { id: productId } });
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+    });
     if (!product) throw new Error('Product not found');
 
     await this.transactionRepository.save({
@@ -121,7 +138,7 @@ export class InventoryService {
       type: InventoryTransactionType.RESERVED,
       quantity: quantity,
       reference_id: orderId,
-      notes: 'Reserved for order ' + orderId
+      notes: 'Reserved for order ' + orderId,
     });
   }
 
@@ -131,7 +148,7 @@ export class InventoryService {
       type: InventoryTransactionType.RESERVED,
       quantity: -quantity, // To offset the reservation
       reference_id: orderId,
-      notes: 'Released for order ' + orderId
+      notes: 'Released for order ' + orderId,
     });
   }
 }

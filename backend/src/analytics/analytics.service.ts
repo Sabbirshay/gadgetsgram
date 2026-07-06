@@ -28,19 +28,29 @@ export class AnalyticsService {
       courierBookedOrders,
       deliveredOrders,
       returnedOrders,
-      monthlyOrders
+      monthlyOrders,
     ] = await Promise.all([
-      this.orderRepository.find({ where: { created_at: Between(today, endOfToday) } }),
+      this.orderRepository.find({
+        where: { created_at: Between(today, endOfToday) },
+      }),
       this.orderRepository.count({ where: { status: OrderStatus.PENDING } }),
       this.orderRepository.count({ where: { status: OrderStatus.CONFIRMED } }),
       this.orderRepository.count({ where: { status: OrderStatus.PACKED } }), // Using PACKED for Courier Booked for now
       this.orderRepository.count({ where: { status: OrderStatus.DELIVERED } }),
       this.orderRepository.count({ where: { status: OrderStatus.RETURNED } }),
-      this.orderRepository.find({ where: { created_at: Between(firstDayOfMonth, endOfToday) } }),
+      this.orderRepository.find({
+        where: { created_at: Between(firstDayOfMonth, endOfToday) },
+      }),
     ]);
 
-    const todaysRevenue = todaysOrders.reduce((sum, order) => sum + Number(order.subtotal), 0);
-    const monthlyRevenue = monthlyOrders.reduce((sum, order) => sum + Number(order.subtotal), 0);
+    const todaysRevenue = todaysOrders.reduce(
+      (sum, order) => sum + Number(order.subtotal),
+      0,
+    );
+    const monthlyRevenue = monthlyOrders.reduce(
+      (sum, order) => sum + Number(order.subtotal),
+      0,
+    );
 
     return {
       todaysOrders: todaysOrders.length,

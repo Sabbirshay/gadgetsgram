@@ -21,14 +21,22 @@ export class DatabaseSeederService implements OnModuleInit {
   }
 
   private async seedAdminUser() {
-    const adminEmail = this.configService.get<string>('ADMIN_EMAIL', 'admin@gadgetsgram.com');
-    const adminPassword = this.configService.get<string>('ADMIN_PASSWORD', 'Admin@123456');
+    const adminEmail = this.configService.get<string>(
+      'ADMIN_EMAIL',
+      'admin@gadgetsgram.com',
+    );
+    const adminPassword = this.configService.get<string>(
+      'ADMIN_PASSWORD',
+      'Admin@123456',
+    );
 
-    const adminExists = await this.userRepository.findOne({ where: { email: adminEmail } });
+    const adminExists = await this.userRepository.findOne({
+      where: { email: adminEmail },
+    });
 
     if (!adminExists) {
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
-      
+
       const admin = this.userRepository.create({
         email: adminEmail,
         password: hashedPassword,

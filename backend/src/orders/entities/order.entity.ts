@@ -71,7 +71,10 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
-  @OneToMany(() => OrderStatusHistory, (history) => history.order, { eager: true, cascade: true })
+  @OneToMany(() => OrderStatusHistory, (history) => history.order, {
+    eager: true,
+    cascade: true,
+  })
   statusHistory: OrderStatusHistory[];
 
   @CreateDateColumn()
@@ -80,4 +83,3 @@ export class Order {
   @UpdateDateColumn()
   updated_at: Date;
 }
-

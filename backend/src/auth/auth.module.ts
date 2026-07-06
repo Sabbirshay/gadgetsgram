@@ -18,7 +18,10 @@ import { DatabaseSeederService } from './database-seeder.service';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService): Promise<any> => ({
-        secret: configService.get<string>('JWT_SECRET', 'super-secret-default-key-change-in-prod'),
+        secret: configService.get<string>(
+          'JWT_SECRET',
+          'super-secret-default-key-change-in-prod',
+        ),
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN', '15m'), // Access token expires in 15m
         },
@@ -27,7 +30,12 @@ import { DatabaseSeederService } from './database-seeder.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, JwtRefreshStrategy, DatabaseSeederService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    JwtRefreshStrategy,
+    DatabaseSeederService,
+  ],
   exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

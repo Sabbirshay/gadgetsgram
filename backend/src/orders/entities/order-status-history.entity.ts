@@ -16,7 +16,9 @@ export class OrderStatusHistory {
   @Column()
   order_id: number;
 
-  @ManyToOne(() => Order, (order) => order.statusHistory, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Order, (order) => order.statusHistory, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'order_id' })
   order: Order;
 

@@ -28,14 +28,20 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : 'Internal server error';
 
     if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(`Error on ${request.url}`, exception instanceof Error ? exception.stack : exception);
+      this.logger.error(
+        `Error on ${request.url}`,
+        exception instanceof Error ? exception.stack : exception,
+      );
     }
 
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: typeof message === 'string' ? message : (message as any).message || message,
+      message:
+        typeof message === 'string'
+          ? message
+          : (message as any).message || message,
     });
   }
 }

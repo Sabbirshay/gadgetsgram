@@ -5,7 +5,7 @@ export const envValidationSchema = Joi.object({
     .valid('development', 'production', 'test', 'provision')
     .default('development'),
   PORT: Joi.number().default(3000),
-  
+
   JWT_SECRET: Joi.string().required(),
   JWT_EXPIRATION: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRATION: Joi.string().default('7d'),
@@ -41,6 +41,6 @@ export const envValidationSchema = Joi.object({
 
   THROTTLE_TTL: Joi.number().default(60000),
   THROTTLE_LIMIT: Joi.number().default(100),
-  
+
   VERCEL: Joi.optional(),
 });

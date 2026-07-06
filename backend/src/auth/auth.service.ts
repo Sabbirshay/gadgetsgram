@@ -19,7 +19,12 @@ export class AuthService {
 
     let user;
     if (adminPassword && loginDto.password === adminPassword) {
-      user = { id: 1, email: loginDto.email, name: 'Admin', role: 'SUPER_ADMIN' };
+      user = {
+        id: 1,
+        email: loginDto.email,
+        name: 'Admin',
+        role: 'SUPER_ADMIN',
+      };
     } else {
       user = await this.userRepository.findOne({
         where: { email: loginDto.email },
@@ -29,7 +34,10 @@ export class AuthService {
         throw new UnauthorizedException('Invalid credentials');
       }
 
-      const isPasswordMatch = await bcrypt.compare(loginDto.password, user.password);
+      const isPasswordMatch = await bcrypt.compare(
+        loginDto.password,
+        user.password,
+      );
 
       if (!isPasswordMatch) {
         throw new UnauthorizedException('Invalid credentials');
@@ -38,14 +46,16 @@ export class AuthService {
 
     const payload = { sub: user.id, email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
-    
+
     // Generate Refresh Token (expires in 7d by default)
     const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
-    
+
     // Hash and store it
     const salt = await bcrypt.genSalt(10);
     const hashedRefreshToken = await bcrypt.hash(refreshToken, salt);
-    await this.userRepository.update(user.id, { hashed_refresh_token: hashedRefreshToken });
+    await this.userRepository.update(user.id, {
+      hashed_refresh_token: hashedRefreshToken,
+    });
 
     return {
       user: {
@@ -65,7 +75,10 @@ export class AuthService {
       throw new UnauthorizedException('Access Denied');
     }
 
-    const refreshTokenMatches = await bcrypt.compare(refreshToken, user.hashed_refresh_token);
+    const refreshTokenMatches = await bcrypt.compare(
+      refreshToken,
+      user.hashed_refresh_token,
+    );
     if (!refreshTokenMatches) {
       throw new UnauthorizedException('Access Denied');
     }
@@ -76,7 +89,9 @@ export class AuthService {
 
     const salt = await bcrypt.genSalt(10);
     const hashedRefreshToken = await bcrypt.hash(newRefreshToken, salt);
-    await this.userRepository.update(user.id, { hashed_refresh_token: hashedRefreshToken });
+    await this.userRepository.update(user.id, {
+      hashed_refresh_token: hashedRefreshToken,
+    });
 
     return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }

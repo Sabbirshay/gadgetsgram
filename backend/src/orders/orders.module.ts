@@ -18,4 +18,3 @@ import { InventoryModule } from '../inventory/inventory.module';
   providers: [OrdersService],
 })
 export class OrdersModule {}
-

@@ -36,7 +36,9 @@ export class NotificationsService {
 
   @OnEvent('order.status_updated')
   async handleOrderStatusUpdatedEvent(order: any) {
-    this.logger.log(`Handling order.status_updated event for Order ID: ${order.id}`);
+    this.logger.log(
+      `Handling order.status_updated event for Order ID: ${order.id}`,
+    );
 
     const notification = this.notificationRepository.create({
       order_id: order.id,
