@@ -36,6 +36,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { SupabaseModule } from './supabase/supabase.module';
 
 import { envValidationSchema } from './config/env.validation';
+import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSchema';
 
 @Module({
   imports: [
@@ -56,7 +57,7 @@ import { envValidationSchema } from './config/env.validation';
             entities: [
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
-            migrations: ['dist/migrations/*{.ts,.js}'],
+            migrations: [InitialSchema1783353166367],
             migrationsRun: true, // Let Vercel run migrations since it has IPv6
             synchronize: false, // Disabled for production safety
           };
