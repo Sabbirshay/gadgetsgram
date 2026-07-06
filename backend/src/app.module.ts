@@ -60,7 +60,7 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
             entities: [
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
-            synchronize: !isProduction,
+            synchronize: true, // TEMPORARY: Set to true to bootstrap tables on first deploy, then set to false
             logging: isProduction ? ['error'] : ['error', 'warn'],
           };
         }
