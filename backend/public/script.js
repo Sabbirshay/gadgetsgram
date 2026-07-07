@@ -1352,7 +1352,7 @@
       // REDESIGNED STATS AND BADGES BINDER
       const orders = profile.orders || [];
       const deliveredOrders = orders.filter(o => o.status.toLowerCase() === 'delivered');
-      const ltv = deliveredOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
+      const ltv = deliveredOrders.reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
       const points = Math.floor(ltv / 10);
       
       document.getElementById('profile-hero-name').innerText = name;
