@@ -2622,6 +2622,7 @@ ul, ol {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.2;
+  color: #ffffff;
 }
 
 .modal-price-row {
@@ -2651,14 +2652,32 @@ ul, ol {
 }
 
 .modal-description {
-  color: var(--gray-300);
+  color: #f1f5f9;
   font-size: 0.95rem;
   line-height: 1.6;
-  max-height: 300px;
+  max-height: 250px;
   overflow-y: auto;
-  padding-right: 10px;
+  padding-right: 12px;
+  padding-left: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
-.modal-description::-webkit-scrollbar { width: 4px; }
+.modal-description::-webkit-scrollbar {
+  width: 6px;
+}
+.modal-description::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-description::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+}
+.modal-description::-webkit-scrollbar-thumb:hover {
+  background: var(--orange-400);
+}
 
 /* Markdown Styles inside description */
 .markdown-body h1, .markdown-body h2, .markdown-body h3 {

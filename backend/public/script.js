@@ -778,12 +778,14 @@
             ${stockBadge}
             <img src="${mainImg}" alt="${p.title}" loading="lazy" />
             <div class="product-hover-actions">
-              <button class="btn-quick-view" onclick="event.stopPropagation(); openProductModal(p)">Quick View</button>
+              <button class="btn-quick-view" onclick="event.stopPropagation(); openProductModalById(${p.id})">Quick View</button>
             </div>
           </div>
           <div class="product-info">
             <div class="product-rating">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Star_rating_4.5_of_5.png" style="height: 12px; display: inline; filter: hue-rotate(320deg) brightness(1.2);" alt="stars"> <span style="font-weight: 600; font-size: 0.8rem; margin-left: 4px;">${rating}/5</span> <span style="color: var(--text-muted); font-size: 0.8rem;">(${reviews})</span>
+              <span style="color: #fbbf24; font-size: 0.95rem; line-height: 1; vertical-align: middle;">${'★'.repeat(Math.round(rating))}${'☆'.repeat(5 - Math.round(rating))}</span>
+              <span style="font-weight: 600; font-size: 0.8rem; margin-left: 4px; vertical-align: middle;">${rating}/5</span>
+              <span style="color: var(--text-muted); font-size: 0.8rem; vertical-align: middle;">(${reviews})</span>
             </div>
             <div class="product-name">${p.title}</div>
             <div class="product-price-row">
@@ -943,6 +945,11 @@
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
+
+  window.openProductModalById = function(id) {
+    const p = globalProducts.find(x => x.id === id);
+    if (p) openProductModal(p);
+  };
 
   function initModalEvents() {
     const modal = document.getElementById('product-detail-overlay');
