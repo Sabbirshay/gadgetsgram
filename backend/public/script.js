@@ -1347,11 +1347,12 @@
       
       // REDESIGNED STATS AND BADGES BINDER
       const orders = profile.orders || [];
-      const ltv = Number(profile.lifetime_value || 0);
+      const deliveredOrders = orders.filter(o => o.status.toLowerCase() === 'delivered');
+      const ltv = deliveredOrders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0);
       const points = Math.floor(ltv / 10);
       
       document.getElementById('profile-hero-name').innerText = name;
-      document.getElementById('profile-summary-orders').innerText = orders.length;
+      document.getElementById('profile-summary-orders').innerText = deliveredOrders.length;
       document.getElementById('profile-summary-spent').innerText = '৳' + Math.floor(ltv).toLocaleString();
       document.getElementById('profile-summary-points').innerText = points;
 
