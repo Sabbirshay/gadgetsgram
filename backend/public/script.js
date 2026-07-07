@@ -10,7 +10,7 @@
   // Use relative path on deployed site, localhost points to local dev server
   const API_BASE = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : '';
+    : 'https://gadgetsgram-backend.onrender.com';
 
   /* ── DOM Ready ───────────────────────────────────────────────── */
   document.addEventListener('DOMContentLoaded', init);

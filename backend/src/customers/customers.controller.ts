@@ -24,14 +24,14 @@ export class CustomersController {
   @UseGuards(SupabaseAuthGuard)
   @Get('profile')
   async getProfile(@Request() req: any) {
-    return this.customersService.getProfile(req.user.id);
+    return this.customersService.getProfile(req.user);
   }
 
   @Public()
   @UseGuards(SupabaseAuthGuard)
   @Put('profile')
   async updateProfile(@Request() req: any, @Body() body: any) {
-    return this.customersService.updateProfile(req.user.id, body);
+    return this.customersService.updateProfile(req.user, body);
   }
 
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.CUSTOMER_SUPPORT)
@@ -50,20 +50,20 @@ export class CustomersController {
   @UseGuards(SupabaseAuthGuard)
   @Get('profile/wishlist')
   async getWishlist(@Request() req: any) {
-    return this.customersService.getWishlist(req.user.id);
+    return this.customersService.getWishlist(req.user);
   }
 
   @Public()
   @UseGuards(SupabaseAuthGuard)
   @Post('profile/wishlist/:productId')
   async addToWishlist(@Request() req: any, @Param('productId', ParseIntPipe) productId: number) {
-    return this.customersService.addToWishlist(req.user.id, productId);
+    return this.customersService.addToWishlist(req.user, productId);
   }
 
   @Public()
   @UseGuards(SupabaseAuthGuard)
   @Delete('profile/wishlist/:productId')
   async removeFromWishlist(@Request() req: any, @Param('productId', ParseIntPipe) productId: number) {
-    return this.customersService.removeFromWishlist(req.user.id, productId);
+    return this.customersService.removeFromWishlist(req.user, productId);
   }
 }

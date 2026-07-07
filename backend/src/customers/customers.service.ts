@@ -70,18 +70,46 @@ export class CustomersService {
     };
   }
 
-  async getProfile(uid: string) {
-    return this.customerRepository.findOne({
-      where: { uid },
-      relations: { orders: { product: true } },
+  private async findOrCreateCustomer(user: any, relations: any = {}): Promise<Customer> {
+    let customer = await this.customerRepository.findOne({
+      where: { uid: user.id },
+      relations,
     });
+    
+    if (!customer) {
+      const email = user.email || '';
+      const phone = user.phone || user.user_metadata?.phone || '';
+      
+      if (phone) {
+        customer = await this.customerRepository.findOne({ where: { phone }, relations });
+      }
+      
+      if (!customer) {
+        customer = this.customerRepository.create({
+          uid: user.id,
+          email: email,
+          name: user.user_metadata?.name || 'Customer',
+          phone: phone,
+          address: '',
+        });
+      } else {
+        // Link existing customer to the Supabase ID
+        customer.uid = user.id;
+        if (email && !customer.email) customer.email = email;
+      }
+      
+      await this.customerRepository.save(customer);
+    }
+    
+    return customer;
   }
 
-  async updateProfile(uid: string, updateDto: any) {
-    const customer = await this.customerRepository.findOne({ where: { uid } });
-    if (!customer) {
-      throw new BadRequestException('Customer not found');
-    }
+  async getProfile(user: any) {
+    return this.findOrCreateCustomer(user, { orders: { product: true } });
+  }
+
+  async updateProfile(user: any, updateDto: any) {
+    const customer = await this.findOrCreateCustomer(user);
     
     if (updateDto.name !== undefined) customer.name = updateDto.name;
     if (updateDto.phone !== undefined) customer.phone = updateDto.phone;
@@ -103,21 +131,13 @@ export class CustomersService {
     });
   }
 
-  async getWishlist(uid: string) {
-    const customer = await this.customerRepository.findOne({
-      where: { uid },
-      relations: { wishlist: true },
-    });
-    if (!customer) throw new BadRequestException('Customer not found');
+  async getWishlist(user: any) {
+    const customer = await this.findOrCreateCustomer(user, { wishlist: true });
     return customer.wishlist;
   }
 
-  async addToWishlist(uid: string, productId: number) {
-    const customer = await this.customerRepository.findOne({
-      where: { uid },
-      relations: { wishlist: true },
-    });
-    if (!customer) throw new BadRequestException('Customer not found');
+  async addToWishlist(user: any, productId: number) {
+    const customer = await this.findOrCreateCustomer(user, { wishlist: true });
 
     const product = await this.productRepository.findOne({ where: { id: productId } });
     if (!product) throw new BadRequestException('Product not found');
@@ -130,12 +150,8 @@ export class CustomersService {
     return customer.wishlist;
   }
 
-  async removeFromWishlist(uid: string, productId: number) {
-    const customer = await this.customerRepository.findOne({
-      where: { uid },
-      relations: { wishlist: true },
-    });
-    if (!customer) throw new BadRequestException('Customer not found');
+  async removeFromWishlist(user: any, productId: number) {
+    const customer = await this.findOrCreateCustomer(user, { wishlist: true });
 
     customer.wishlist = customer.wishlist.filter(p => p.id !== productId);
     await this.customerRepository.save(customer);
