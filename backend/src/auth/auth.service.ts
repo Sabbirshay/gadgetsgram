@@ -15,25 +15,18 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const adminPassword = process.env.ADMIN_PASSWORD;
+    const user = await this.userRepository.findOne({
+      where: { email: loginDto.email },
+    });
 
-    let user;
-    if (adminPassword && loginDto.password === adminPassword) {
-      user = { id: 1, email: loginDto.email, name: 'Admin', role: 'SUPER_ADMIN' };
-    } else {
-      user = await this.userRepository.findOne({
-        where: { email: loginDto.email },
-      });
+    if (!user || !user.is_active) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-      if (!user || !user.is_active) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
+    const isPasswordMatch = await bcrypt.compare(loginDto.password, user.password);
 
-      const isPasswordMatch = await bcrypt.compare(loginDto.password, user.password);
-
-      if (!isPasswordMatch) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
+    if (!isPasswordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const payload = { sub: user.id, email: user.email, role: user.role };

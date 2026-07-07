@@ -12,8 +12,6 @@ import { ProductsService } from './products.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { Public, Roles } from '../common/decorators';
 import { UserRole } from '../common/enums';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../common/guards/roles.guard';
 
 
 @Controller('products')
@@ -29,7 +27,6 @@ export class ProductsController {
     return this.productsService.findAll(false, query);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MARKETING, UserRole.INVENTORY_MANAGER)
   @Get('admin/all')
   async findAllAdmin() {
@@ -42,14 +39,12 @@ export class ProductsController {
     return this.productsService.findOne(id);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Post()
   async create(@Body() createProductDto: any) {
     return this.productsService.create(createProductDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Post('upload-image')
   @UseInterceptors(
@@ -77,7 +72,6 @@ export class ProductsController {
     }
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Put('bulk/status')
   async bulkUpdateStatus(@Body() body: { ids: number[], status: string }) {
@@ -87,14 +81,12 @@ export class ProductsController {
     return this.productsService.bulkUpdateStatus(body.ids, body.status as any);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Put(':id')
   async update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: any) {
     return this.productsService.update(id, updateProductDto);
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @Delete(':id')
   async remove(@Param('id', ParseIntPipe) id: number) {

@@ -26,9 +26,9 @@ services:
       - key: SUPABASE_KEY
         sync: false
       - key: ADMIN_EMAIL
-        value: adminroni@gadgetsgram.com
+        sync: false
       - key: ADMIN_PASSWORD
-        value: 123@Gram
+        sync: false
       - key: API_PREFIX
         value: api/v1
       - key: CORS_ORIGIN

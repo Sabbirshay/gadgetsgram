@@ -50,8 +50,6 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
         const databaseUrl = configService.get<string>('DATABASE_URL');
         
         if (databaseUrl) {
-          // WARNING: synchronize auto-creates/alters tables. Safe for dev/staging,
-          // but should be false in production once schema is stable.
           const isProduction = configService.get<string>('NODE_ENV') === 'production';
           return {
             type: 'postgres',
@@ -60,7 +58,9 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
             entities: [
               User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
             ],
-            synchronize: !isProduction,
+            synchronize: false,
+            migrationsRun: true,
+            migrations: [InitialSchema1783353166367],
             logging: isProduction ? ['error'] : ['error', 'warn'],
           };
         }
@@ -72,7 +72,9 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
           entities: [
             User, Product, Order, OrderStatusHistory, Customer, Notification, CourierShipment, AuditLog, Setting, InventoryTransaction,
           ],
-          synchronize: true,
+          synchronize: false,
+          migrationsRun: true,
+          migrations: [InitialSchema1783353166367],
         };
       },
     }),
@@ -108,6 +110,14 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_FILTER,

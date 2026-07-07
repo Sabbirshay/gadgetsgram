@@ -1,21 +1,26 @@
 import { Controller, Get, Post, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { InventoryService } from './inventory.service';
+import { Roles } from '../common/decorators';
+import { UserRole } from '../common/enums';
 
 @Controller('inventory')
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER, UserRole.CUSTOMER_SUPPORT, UserRole.MARKETING)
   @Get('summary')
   async getSummary() {
     return this.inventoryService.getSummary();
   }
 
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER, UserRole.CUSTOMER_SUPPORT, UserRole.MARKETING)
   @Get('alerts')
   async getAlerts() {
     return this.inventoryService.getAlerts();
   }
 
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.INVENTORY_MANAGER)
   @Post('bulk-update')
   @UseInterceptors(FileInterceptor('file'))
   async bulkUpdate(@UploadedFile() file: Express.Multer.File) {

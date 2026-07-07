@@ -32,8 +32,8 @@ export const envValidationSchema = Joi.object({
   ADMIN_PASSWORD: Joi.string().required(),
 
   API_PREFIX: Joi.string().default('api/v1'),
-  // Default to wildcard so cold starts on Vercel don't crash when CORS_ORIGIN is missing
-  CORS_ORIGIN: Joi.string().default('*'),
+  // Default to localhost so cold starts on Vercel don't crash when CORS_ORIGIN is missing
+  CORS_ORIGIN: Joi.string().default('http://localhost:8080'),
 
   THROTTLE_TTL: Joi.number().default(60000),
   THROTTLE_LIMIT: Joi.number().default(100),

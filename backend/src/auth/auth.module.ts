@@ -20,7 +20,7 @@ import { DatabaseSeederService } from './database-seeder.service';
       useFactory: async (configService: ConfigService): Promise<any> => ({
         secret: configService.get<string>('JWT_SECRET', 'super-secret-default-key-change-in-prod'),
         signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN', '15m'), // Access token expires in 15m
+          expiresIn: configService.get<string>('JWT_EXPIRATION', '15m'), // Access token expires in 15m
         },
       }),
       inject: [ConfigService],

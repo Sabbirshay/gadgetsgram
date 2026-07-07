@@ -44,7 +44,7 @@ async function uploadInventoryCsv(event) {
   formData.append('file', file);
 
   try {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('gg_token');
     const response = await fetch('/api/v1/inventory/bulk-update', {
       method: 'POST',
       headers: {
