@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException, ServiceUnavailableException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Customer } from './entities/customer.entity';
@@ -8,6 +8,8 @@ import { Product } from '../products/entities/product.entity';
 
 @Injectable()
 export class CustomersService {
+  private readonly logger = new Logger(CustomersService.name);
+
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
@@ -17,7 +19,15 @@ export class CustomersService {
   ) {}
 
   async register(registerDto: any) {
-    const supabase = this.supabaseService.getClient();
+    let supabase;
+    try {
+      supabase = this.supabaseService.getClient();
+    } catch (err) {
+      this.logger.error(`Failed to get Supabase client: ${err.message}`);
+      throw new ServiceUnavailableException(
+        'Authentication service is not configured on the server. Please check SUPABASE_URL and SUPABASE_KEY in the Render dashboard.',
+      );
+    }
     const { email, password, name, phone } = registerDto;
 
     const { data, error } = await supabase.auth.signUp({
@@ -50,7 +60,15 @@ export class CustomersService {
   }
 
   async login(loginDto: any) {
-    const supabase = this.supabaseService.getClient();
+    let supabase;
+    try {
+      supabase = this.supabaseService.getClient();
+    } catch (err) {
+      this.logger.error(`Failed to get Supabase client: ${err.message}`);
+      throw new ServiceUnavailableException(
+        'Authentication service is not configured on the server. Please check SUPABASE_URL and SUPABASE_KEY in the Render dashboard.',
+      );
+    }
     const { email, password } = loginDto;
 
     const { data, error } = await supabase.auth.signInWithPassword({
