@@ -40,6 +40,10 @@
     initRouter();
   }
 
+  function initRouter() {
+    handleRoute();
+  }
+
   window.routeTo = function(path) {
     history.pushState(null, '', path);
     handleRoute();
