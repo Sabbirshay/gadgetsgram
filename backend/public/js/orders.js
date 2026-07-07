@@ -74,7 +74,22 @@ async function loadOrders() {
         ? (order.address.length > 30 ? order.address.substring(0, 30) + '…' : order.address)
         : '—';
       
-      const productName = order.product ? (order.product.title || order.product.nameEn) : `Product #${order.product_id}`;
+      let productName = order.product ? (order.product.title || order.product.nameEn) : `Product #${order.product_id}`;
+      let quantity = order.quantity;
+      let price = `৳${order.price}`;
+      
+      if (order.items_json) {
+        try {
+          const items = JSON.parse(order.items_json);
+          if (Array.isArray(items) && items.length > 0) {
+            productName = items.map(item => item.title).join(', ');
+            quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+            price = items.map(item => `৳${item.price}`).join(', ');
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
       
       tbody.innerHTML += `
         <tr>
@@ -92,8 +107,8 @@ async function loadOrders() {
           </td>
           <td style="font-size: 13px;">${order.district || '—'}</td>
           <td style="font-size: 13px; font-weight: 500;">${productName}</td>
-          <td style="font-size: 13px;">${order.quantity}</td>
-          <td style="font-size: 13px;">৳${order.price}</td>
+          <td style="font-size: 13px;">${quantity}</td>
+          <td style="font-size: 13px;">${price}</td>
           <td style="font-weight: 600">৳${order.subtotal}</td>
           <td>
             <span class="badge badge-${order.status}">${statusLabel(order.status)}</span>
@@ -164,6 +179,64 @@ async function viewOrder(id) {
     // Build status timeline
     const timeline = buildStatusTimeline(order);
 
+    let itemsHtml = '';
+    if (order.items_json) {
+      try {
+        const items = JSON.parse(order.items_json);
+        if (Array.isArray(items) && items.length > 0) {
+          itemsHtml = `
+            <div style="grid-column: 1 / -1; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Items Ordered</div>
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--border); text-align: left; color: var(--text-muted);">
+                    <th style="padding: 6px 0;">Item</th>
+                    <th style="padding: 6px 8px; text-align: center;">Qty</th>
+                    <th style="padding: 6px 8px; text-align: right;">Price</th>
+                    <th style="padding: 6px 0; text-align: right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map(item => `
+                    <tr style="border-bottom: 1px dotted var(--border);">
+                      <td style="padding: 8px 0; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                        <img src="${item.image || 'assets/headphone.png'}" style="width: 32px; height: 32px; object-fit: contain; background: white; border-radius: 4px; border: 1px solid var(--border);" />
+                        <span>${item.title}</span>
+                      </td>
+                      <td style="padding: 8px; text-align: center;">${item.quantity}</td>
+                      <td style="padding: 8px; text-align: right;">৳${item.price}</td>
+                      <td style="padding: 8px 0; text-align: right; font-weight: 600;">৳${item.price * item.quantity}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (!itemsHtml) {
+      itemsHtml = `
+        <div style="grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 12px;">
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Product</div>
+            <div style="font-weight: 600;">${productName}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Quantity</div>
+            <div style="font-weight: 500;">${order.quantity}</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Unit Price</div>
+            <div style="font-weight: 500;">৳${order.price}</div>
+          </div>
+        </div>
+      `;
+    }
+
     body.innerHTML = `
       <!-- Customer Information -->
       <div style="margin-bottom: 24px;">
@@ -200,18 +273,7 @@ async function viewOrder(id) {
         <h3 style="font-size: 14px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">📦 Order Details</h3>
         <div style="background: #f8fafc; border-radius: 10px; padding: 16px 20px; border: 1px solid var(--border);">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-            <div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Product</div>
-              <div style="font-weight: 600;">${productName}</div>
-            </div>
-            <div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Quantity</div>
-              <div style="font-weight: 500;">${order.quantity}</div>
-            </div>
-            <div>
-              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Unit Price</div>
-              <div style="font-weight: 500;">৳${order.price}</div>
-            </div>
+            ${itemsHtml}
             <div>
               <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 2px;">Delivery Charge</div>
               <div style="font-weight: 500;">৳${order.delivery_charge}</div>

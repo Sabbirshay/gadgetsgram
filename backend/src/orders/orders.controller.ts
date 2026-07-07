@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, ParseIntPipe, Query, Headers } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Public, Roles } from '../common/decorators';
@@ -10,8 +10,11 @@ export class OrdersController {
 
   @Public()
   @Post()
-  async create(@Body() createOrderDto: CreateOrderDto) {
-    const order = await this.ordersService.create(createOrderDto);
+  async create(
+    @Body() createOrderDto: CreateOrderDto,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    const order = await this.ordersService.create(createOrderDto, authHeader);
     return { success: true, orderId: order.orderId };
   }
 

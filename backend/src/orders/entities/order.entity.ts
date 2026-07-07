@@ -71,6 +71,9 @@ export class Order {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'text', nullable: true })
+  items_json: string;
+
   @OneToMany(() => OrderStatusHistory, (history) => history.order, { eager: true, cascade: true })
   statusHistory: OrderStatusHistory[];
 

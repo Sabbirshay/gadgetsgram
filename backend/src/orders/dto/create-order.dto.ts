@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
@@ -45,4 +45,8 @@ export class CreateOrderDto {
   @IsString()
   @IsOptional()
   productImage?: string;
+
+  @IsArray()
+  @IsOptional()
+  items?: any[];
 }

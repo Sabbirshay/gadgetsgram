@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { SupabaseService } from '../supabase/supabase.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
@@ -12,6 +13,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
@@ -22,32 +25,98 @@ export class OrdersService {
     private readonly productsService: ProductsService,
     private readonly inventoryService: InventoryService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly supabaseService: SupabaseService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto) {
-    const product = await this.productsService.findOne(createOrderDto.productId);
-    
-    if (product.stock < (createOrderDto.quantity || 1)) {
-      throw new BadRequestException('Not enough stock available');
+  async create(createOrderDto: CreateOrderDto, authHeader?: string) {
+    let customer;
+
+    // Check if customer is authenticated
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const supabase = this.supabaseService.getClient();
+        const { data, error } = await supabase.auth.getUser(token);
+        if (!error && data.user) {
+          customer = await this.customerRepository.findOne({ where: { uid: data.user.id } });
+        }
+      } catch (err) {
+        this.logger.error(`Failed to verify token during order creation: ${err.message}`);
+      }
     }
 
-    const price = Number(product.sale_price || product.price);
-    const quantity = createOrderDto.quantity || 1;
-    const delivery_charge = 60; // Base delivery charge, can be dynamic based on district later
-    const subtotal = (price * quantity) + delivery_charge;
-
-    // Customer Handling
-    let customer = await this.customerRepository.findOne({ where: { phone: createOrderDto.phone } });
+    // If not authenticated or not found in DB, find or create by phone
     if (!customer) {
-      customer = this.customerRepository.create({
-        name: createOrderDto.customerName,
-        phone: createOrderDto.phone,
-        orders_count: 0,
-        lifetime_value: 0,
-      });
+      customer = await this.customerRepository.findOne({ where: { phone: createOrderDto.phone } });
+      if (!customer) {
+        customer = this.customerRepository.create({
+          name: createOrderDto.customerName,
+          phone: createOrderDto.phone,
+          orders_count: 0,
+          lifetime_value: 0,
+        });
+        await this.customerRepository.save(customer);
+      }
+    }
+
+    // Proactively update customer phone and address if they were empty
+    let customerUpdated = false;
+    if (!customer.phone && createOrderDto.phone) {
+      customer.phone = createOrderDto.phone;
+      customerUpdated = true;
+    }
+    if (!customer.address && createOrderDto.address) {
+      customer.address = createOrderDto.address;
+      customerUpdated = true;
+    }
+    if (customerUpdated) {
       await this.customerRepository.save(customer);
     }
-    
+
+    // Resolve product items and verify stock
+    const rawItems = createOrderDto.items;
+    const orderItems: any[] = [];
+    let firstProductId = createOrderDto.productId;
+    let firstQty = createOrderDto.quantity || 1;
+    let firstPrice = 0;
+
+    if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
+      for (const item of rawItems) {
+        const product = await this.productsService.findOne(item.productId);
+        if (product.stock < item.quantity) {
+          throw new BadRequestException(`Not enough stock available for ${product.title}`);
+        }
+        const price = Number(product.sale_price || product.price);
+        orderItems.push({
+          productId: product.id,
+          title: product.title,
+          price,
+          quantity: item.quantity,
+          image: JSON.parse(product.images || '[]')[0] || 'assets/headphone.png'
+        });
+      }
+      firstProductId = orderItems[0].productId;
+      firstQty = orderItems[0].quantity;
+      firstPrice = orderItems[0].price;
+    } else {
+      const product = await this.productsService.findOne(createOrderDto.productId);
+      if (product.stock < firstQty) {
+        throw new BadRequestException('Not enough stock available');
+      }
+      firstPrice = Number(product.sale_price || product.price);
+      orderItems.push({
+        productId: product.id,
+        title: product.title,
+        price: firstPrice,
+        quantity: firstQty,
+        image: JSON.parse(product.images || '[]')[0] || 'assets/headphone.png'
+      });
+    }
+
+    const delivery_charge = 60; // Flat delivery charge for consolidated order
+    const itemsTotal = orderItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = itemsTotal + delivery_charge;
+
     // Update Customer Stats
     customer.orders_count += 1;
     customer.lifetime_value = Number(customer.lifetime_value) + subtotal;
@@ -60,14 +129,15 @@ export class OrdersService {
       alternative_phone: createOrderDto.alternativePhone,
       address: createOrderDto.address,
       district: createOrderDto.district,
-      product_id: createOrderDto.productId,
+      product_id: firstProductId,
       notes: createOrderDto.note,
-      quantity,
-      price,
+      quantity: firstQty,
+      price: firstPrice,
       delivery_charge,
       subtotal,
       status: OrderStatus.PENDING,
       customer_id: customer.id,
+      items_json: JSON.stringify(orderItems)
     });
 
     let savedOrder = await this.orderRepository.save(order);
@@ -83,8 +153,10 @@ export class OrdersService {
       }),
     );
 
-    // Reserve stock
-    await this.inventoryService.reserveStock(product.id, quantity, savedOrder.id.toString());
+    // Reserve stock for all items
+    for (const item of orderItems) {
+      await this.inventoryService.reserveStock(item.productId, item.quantity, savedOrder.id.toString());
+    }
 
     // Emit event for notification service
     this.eventEmitter.emit('order.created', savedOrder);
@@ -188,7 +260,18 @@ export class OrdersService {
       (status === OrderStatus.CANCELLED || status === OrderStatus.RETURNED) &&
       !(oldStatus === OrderStatus.CANCELLED || oldStatus === OrderStatus.RETURNED)
     ) {
-      await this.inventoryService.releaseStock(order.product_id, order.quantity, order.id.toString());
+      if (order.items_json) {
+        try {
+          const items = JSON.parse(order.items_json);
+          for (const item of items) {
+            await this.inventoryService.releaseStock(item.productId, item.quantity, order.id.toString());
+          }
+        } catch (err) {
+          this.logger.error(`Failed to release stock for items_json: ${err.message}`);
+        }
+      } else {
+        await this.inventoryService.releaseStock(order.product_id, order.quantity, order.id.toString());
+      }
     }
 
     this.eventEmitter.emit('order.status_updated', updatedOrder);

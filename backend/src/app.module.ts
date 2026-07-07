@@ -37,6 +37,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 
 import { envValidationSchema } from './config/env.validation';
 import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSchema';
+import { AddItemsJsonToOrders1783353166368 } from './migrations/1783353166368-AddItemsJsonToOrders';
 
 @Module({
   imports: [
@@ -60,7 +61,7 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
             ],
             synchronize: false,
             migrationsRun: true,
-            migrations: [InitialSchema1783353166367],
+            migrations: [InitialSchema1783353166367, AddItemsJsonToOrders1783353166368],
             logging: isProduction ? ['error'] : ['error', 'warn'],
           };
         }
@@ -74,7 +75,7 @@ import { InitialSchema1783353166367 } from './migrations/1783353166367-InitialSc
           ],
           synchronize: false,
           migrationsRun: true,
-          migrations: [InitialSchema1783353166367],
+          migrations: [InitialSchema1783353166367, AddItemsJsonToOrders1783353166368],
         };
       },
     }),

@@ -169,38 +169,37 @@
           headers['Authorization'] = 'Bearer ' + token;
         }
 
-        // Submit each item as a separate order request in parallel
-        const orderPromises = itemsToOrder.map(item => {
-          const payload = {
-            customerName,
-            phone,
-            address,
-            district,
-            productId: item.productId,
-            quantity: item.quantity
-          };
-          return fetch(API_BASE + '/api/v1/orders', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify(payload)
-          }).then(async res => {
-            if (!res.ok) {
-              const errData = await res.json().catch(() => ({}));
-              throw new Error(errData.message || 'Failed to submit order for some items');
-            }
-            return res.json();
-          });
+        // Submit all items in a single consolidated request
+        const payload = {
+          customerName,
+          phone,
+          address,
+          district,
+          productId: itemsToOrder[0].productId,
+          quantity: itemsToOrder[0].quantity,
+          items: itemsToOrder
+        };
+
+        const res = await fetch(API_BASE + '/api/v1/orders', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload)
         });
 
-        const results = await Promise.all(orderPromises);
-        const orderIds = results.map(r => r.data?.orderId || r.orderId).filter(Boolean);
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || 'Failed to submit order. Please try again.');
+        }
+
+        const data = await res.json();
+        const orderId = data.data?.orderId || data.orderId;
 
         // Clear cart
         clearCart();
         form.reset();
 
-        // Redirect to success screen with all order IDs comma separated
-        window.routeTo('/order/success?id=' + orderIds.join(', '));
+        // Redirect to success screen
+        window.routeTo('/order/success?id=' + orderId);
 
       } catch (err) {
         if (errorMsg) {
@@ -1267,7 +1266,18 @@
     orders.forEach(order => {
       const d = new Date(order.created_at);
       const dateStr = d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const productTitle = order.product ? order.product.title : 'Product Removed';
+      let productDisplay = order.product 
+        ? `${order.product.title} <span style="color: var(--text-muted); font-size: 12px;">x${order.quantity}</span>`
+        : 'Product Removed';
+
+      if (order.items_json) {
+        try {
+          const items = JSON.parse(order.items_json);
+          if (Array.isArray(items) && items.length > 0) {
+            productDisplay = items.map(item => `${item.title} <span style="color: var(--text-muted); font-size: 12px;">x${item.quantity}</span>`).join('<br />');
+          }
+        } catch(e) {}
+      }
       
       const statusColors = {
         pending: '#b45309', confirmed: '#1d4ed8', packed: '#4338ca', courier_booked: '#be185d',
@@ -1290,7 +1300,7 @@
             </a>
           </td>
           <td style="padding: 16px 8px; color: var(--text-muted); font-size: 14px;">${dateStr}</td>
-          <td style="padding: 16px 8px;">${productTitle} <span style="color: var(--text-muted); font-size: 12px;">x${order.quantity}</span></td>
+          <td style="padding: 16px 8px;">${productDisplay}</td>
           <td style="padding: 16px 8px; font-weight: 600;">৳${order.subtotal}</td>
           <td style="padding: 16px 8px;">
             <span style="background: ${stBg}; color: ${stColor}; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;">
@@ -1350,11 +1360,20 @@
       timelineHtml += '</div>';
       
       const productTitle = order.product ? order.product.title : 'Product';
+      let itemsDisplay = `Item: <span style="color: var(--text);">${productTitle}</span> (Qty: ${order.quantity})`;
+      if (order.items_json) {
+        try {
+          const items = JSON.parse(order.items_json);
+          if (Array.isArray(items) && items.length > 0) {
+            itemsDisplay = items.map(item => `Item: <span style="color: var(--text);">${item.title}</span> (Qty: ${item.quantity})`).join('<br />');
+          }
+        } catch (e) {}
+      }
       
       resultDiv.innerHTML = `
         <div style="border-top: 1px solid var(--border); margin-top: 24px; padding-top: 24px;">
           <h3 style="font-size: 18px; margin-bottom: 12px;">Order <strong>${order.orderId}</strong></h3>
-          <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 4px;">Item: <span style="color: var(--text);">${productTitle}</span> (Qty: ${order.quantity})</div>
+          <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">${itemsDisplay}</div>
           <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 24px;">Total: <span style="color: var(--text); font-weight: 600;">৳${order.subtotal}</span></div>
           ${timelineHtml}
         </div>
