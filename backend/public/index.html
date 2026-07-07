@@ -798,82 +798,118 @@
   <!-- ═══════════════════════════════════════════════════════════════
        PROFILE VIEW
        ═══════════════════════════════════════════════════════════════ -->
-  <main id="profile-view" style="display: none; padding-top: 100px; padding-bottom: 60px;">
+  <main id="profile-view" style="display: none; padding-top: 0; padding-bottom: 60px;">
+    <!-- Sticky Header -->
+    <div class="profile-sticky-header">
+      <button class="profile-back-btn" onclick="handleProfileBack()" aria-label="Back">‹</button>
+      <h2 class="profile-header-title">Profile</h2>
+      <div style="width: 44px; height: 44px;"></div>
+    </div>
+
     <div class="container" style="max-width: 600px;">
       
       <!-- Dashboard View -->
-      <div id="profile-dashboard">
-        <!-- Header Card -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; cursor: pointer; transition: border-color 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="showProfileView('edit')">
-          <div style="display: flex; align-items: center; gap: 16px;">
-            <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: 28px; border: 2px solid var(--primary);">👤</div>
-            <div>
-              <h2 id="profile-header-name" style="font-size: 20px; font-weight: 700; margin-bottom: 4px;">User</h2>
-              <div style="font-size: 14px; color: var(--text-muted);">Welcome to Gadget Gram</div>
+      <div id="profile-dashboard" style="display: block;">
+        <!-- Hero Card -->
+        <div class="profile-hero-card">
+          <div class="profile-avatar-wrapper">
+            <img id="profile-avatar-img" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="Avatar" />
+            <label for="profile-avatar-input" class="profile-avatar-edit-badge" title="Upload avatar">
+              📷
+            </label>
+            <input type="file" id="profile-avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarUpload(event)" />
+          </div>
+          <div class="profile-hero-info">
+            <div class="profile-hero-name" id="profile-hero-name">Loading...</div>
+            <div class="profile-membership-badge badge-bronze" id="profile-membership-badge">Bronze Member</div>
+          </div>
+          <div class="profile-summary-grid">
+            <div class="profile-summary-item">
+              <span class="profile-summary-val" id="profile-summary-orders">0</span>
+              <span class="profile-summary-lbl">Orders</span>
+            </div>
+            <div class="profile-summary-item">
+              <span class="profile-summary-val" id="profile-summary-spent">৳0</span>
+              <span class="profile-summary-lbl">Spent</span>
+            </div>
+            <div class="profile-summary-item">
+              <span class="profile-summary-val" id="profile-summary-points">0</span>
+              <span class="profile-summary-lbl">Points</span>
             </div>
           </div>
-          <div style="color: var(--primary); font-size: 20px;">📝</div>
         </div>
 
-        <!-- Menu Group 1 -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 8px 0; margin-bottom: 24px;">
-          <a href="#" onclick="showProfileView('orders'); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: var(--primary);">📦</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">My Orders</div>
-              <div class="profile-menu-subtitle">View past & current orders</div>
+        <!-- Quick Action Dashboard -->
+        <div class="profile-dashboard-grid">
+          <div class="profile-action-card" onclick="showProfileView('orders')">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">📦</span>
+              <span class="profile-card-badge" id="badge-orders-all">0</span>
             </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
-          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
-          <a href="#" onclick="showProfileView('edit'); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: var(--primary);">📝</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">Manage Addresses</div>
-              <div class="profile-menu-subtitle">Add/edit personal info & delivery addresses</div>
+            <div>
+              <div class="profile-card-title">Orders</div>
+              <div class="profile-card-val">Total History</div>
             </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
-          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
-          <a href="#" onclick="alert('Payment Methods coming soon!'); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: var(--primary);">💳</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">Payment Methods</div>
-              <div class="profile-menu-subtitle">Saved cards, mobile banking</div>
+          </div>
+          <div class="profile-action-card" onclick="showProfileView('orders')">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">🚚</span>
+              <span class="profile-card-badge" id="badge-orders-shipping">0</span>
             </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
-          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
-          <a href="#" onclick="alert('Wishlist coming soon!'); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: var(--primary);">❤️</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">Wishlist</div>
-              <div class="profile-menu-subtitle">Saved favorite items</div>
+            <div>
+              <div class="profile-card-title">Shipping</div>
+              <div class="profile-card-val">In Transit</div>
             </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
+          </div>
+          <div class="profile-action-card" onclick="showProfileView('orders')">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">🎉</span>
+              <span class="profile-card-badge" id="badge-orders-delivered">0</span>
+            </div>
+            <div>
+              <div class="profile-card-title">Delivered</div>
+              <div class="profile-card-val">Completed</div>
+            </div>
+          </div>
+          <div class="profile-action-card" onclick="const favs = document.querySelector('.nav-link[href=\'#favourites\']'); if (favs) favs.click();">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">❤️</span>
+              <span class="profile-card-badge" id="badge-wishlist-count">0</span>
+            </div>
+            <div>
+              <div class="profile-card-title">Wishlist</div>
+              <div class="profile-card-val">Favorites</div>
+            </div>
+          </div>
+          <div class="profile-action-card" onclick="alert('You have 2 coupons available: GG50, WELCOME10')">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">🎫</span>
+              <span class="profile-card-badge">2</span>
+            </div>
+            <div>
+              <div class="profile-card-title">Coupons</div>
+              <div class="profile-card-val">Available</div>
+            </div>
+          </div>
+          <div class="profile-action-card" onclick="alert('Spend reward points during checkout to get discounts!')">
+            <div class="profile-card-header">
+              <span class="profile-card-icon">🪙</span>
+              <span class="profile-card-badge" id="badge-rewards-points">0</span>
+            </div>
+            <div>
+              <div class="profile-card-title">Rewards</div>
+              <div class="profile-card-val">Points Earned</div>
+            </div>
+          </div>
         </div>
 
-        <!-- Menu Group 2 -->
-        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 8px 0;">
-          <a href="/#faq" onclick="window.routeTo('/'); setTimeout(() => document.getElementById('faq').scrollIntoView(), 100); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: var(--primary);">🛠️</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">Support / Help</div>
-              <div class="profile-menu-subtitle">FAQs, Contact Us, Chat Support</div>
-            </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
-          <div style="height: 1px; background: var(--border); margin: 0 16px;"></div>
-          <a href="#" onclick="logout(); return false;" class="profile-menu-item">
-            <div class="profile-menu-icon" style="color: #ef4444;">🚪</div>
-            <div class="profile-menu-text">
-              <div class="profile-menu-title">Logout</div>
-              <div class="profile-menu-subtitle">Sign out securely</div>
-            </div>
-            <div class="profile-menu-chevron">›</div>
-          </a>
-        </div>
+        <!-- Dynamic Grouped List Sections -->
+        <div id="profile-menu-groups"></div>
+
+        <!-- Visually Separated Logout Button -->
+        <button class="profile-logout-btn" onclick="logout()">
+          <span>🚪</span> Log Out
+        </button>
       </div>
 
       <!-- Edit Profile View -->

@@ -16,6 +16,14 @@
   document.addEventListener('DOMContentLoaded', init);
 
   function init() {
+    // Load theme preference immediately
+    const savedTheme = localStorage.getItem('gg_theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+
     initNavbar();
     initMobileMenu();
     initScrollReveal();
@@ -1136,6 +1144,151 @@
   /* ══════════════════════════════════════════════════════════════
      12. PROFILE & TRACKING
      ══════════════════════════════════════════════════════════════ */
+  // ── PROFILE PREMIUM UI HELPERS ───────────────────────────────────
+  const PROFILE_MENU_SECTIONS = [
+    {
+      title: 'Shopping',
+      items: [
+        { icon: '📦', title: 'My Orders', subtitle: 'View past & current orders', action: () => showProfileView('orders') },
+        { icon: '❤️', title: 'Wishlist', subtitle: 'Saved favorite items', action: () => { const favs = document.querySelector('.nav-link[href="#favourites"]'); if (favs) favs.click(); } },
+        { icon: '🎫', title: 'Active Coupons', subtitle: 'View your available coupon codes', action: () => alert('You have 2 coupons available: GG50, WELCOME10') }
+      ]
+    },
+    {
+      title: 'Account',
+      items: [
+        { icon: '👤', title: 'Personal Information', subtitle: 'Update your name and phone number', action: () => showProfileView('edit') },
+        { icon: '📍', title: 'Saved Addresses', subtitle: 'Manage default delivery address', action: () => showProfileView('edit') }
+      ]
+    },
+    {
+      title: 'Preferences',
+      items: [
+        { 
+          icon: '🌓', 
+          title: 'Theme Settings', 
+          subtitle: 'Switch between Dark and Light mode', 
+          action: () => toggleThemePreference() 
+        },
+        { icon: '🔔', title: 'Notifications', subtitle: 'Email and SMS alerts settings', action: () => alert('Notifications are enabled for shipping updates.') }
+      ]
+    },
+    {
+      title: 'Help & Security',
+      items: [
+        { icon: '🛠️', title: 'Customer Support', subtitle: 'FAQs, Contact Us, Chat Support', action: () => { const faqLink = document.querySelector('a[href="/#faq"]'); if (faqLink) faqLink.click(); } },
+        { icon: '🚪', title: 'Sign Out', subtitle: 'Log out of your account securely', action: () => logout() }
+      ]
+    }
+  ];
+
+  window.handleProfileBack = function() {
+    const editView = document.getElementById('profile-edit-view');
+    const ordersView = document.getElementById('profile-orders-view');
+    if ((editView && editView.style.display !== 'none') || (ordersView && ordersView.style.display !== 'none')) {
+      showProfileView('dashboard');
+    } else {
+      routeTo('/');
+    }
+  };
+
+  window.toggleThemePreference = function() {
+    document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('gg_theme', isLight ? 'light' : 'dark');
+    renderProfileMenu();
+  };
+
+  window.handleAvatarUpload = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      const avatarImg = document.getElementById('profile-avatar-img');
+      if (avatarImg) avatarImg.src = base64;
+      
+      const token = localStorage.getItem('gg_token');
+      if (token) {
+        try {
+          const base64Url = token.split('.')[1];
+          const base64Clean = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const payload = JSON.parse(window.atob(base64Clean));
+          const userId = payload.sub || payload.id;
+          if (userId) {
+            localStorage.setItem('gg_avatar_' + userId, base64);
+          }
+        } catch(err) {
+          console.error(err);
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  window.renderProfileMenu = function() {
+    const container = document.getElementById('profile-menu-groups');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    PROFILE_MENU_SECTIONS.forEach(sec => {
+      const secEl = document.createElement('div');
+      secEl.style.marginBottom = '24px';
+      
+      const titleEl = document.createElement('h3');
+      titleEl.style.fontSize = '12px';
+      titleEl.style.fontWeight = '700';
+      titleEl.style.textTransform = 'uppercase';
+      titleEl.style.letterSpacing = '1px';
+      titleEl.style.color = 'var(--text-muted)';
+      titleEl.style.marginBottom = '12px';
+      titleEl.style.paddingLeft = '8px';
+      titleEl.textContent = sec.title;
+      secEl.appendChild(titleEl);
+      
+      const groupEl = document.createElement('div');
+      groupEl.className = 'profile-menu-group';
+      
+      sec.items.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = 'profile-menu-row';
+        row.setAttribute('role', 'button');
+        row.setAttribute('tabindex', '0');
+        row.onclick = item.action;
+        row.onkeydown = (e) => { if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); item.action(); } };
+        
+        // Dynamic status subtitles (e.g. for theme toggle)
+        let subtitle = item.subtitle;
+        if (item.title === 'Theme Settings') {
+          const isLight = document.body.classList.contains('light-theme');
+          subtitle = `Current: ${isLight ? 'Light Mode' : 'Dark Mode'}`;
+        }
+        
+        row.innerHTML = `
+          <div class="profile-row-leading">
+            <div class="profile-row-icon">${item.icon}</div>
+            <div class="profile-row-meta">
+              <div class="profile-row-title">${item.title}</div>
+              ${subtitle ? `<div class="profile-row-subtitle">${subtitle}</div>` : ''}
+            </div>
+          </div>
+          <div class="profile-row-chevron">›</div>
+        `;
+        groupEl.appendChild(row);
+        
+        if (idx < sec.items.length - 1) {
+          const divider = document.createElement('div');
+          divider.className = 'profile-row-divider';
+          groupEl.appendChild(divider);
+        }
+      });
+      
+      secEl.appendChild(groupEl);
+      container.appendChild(secEl);
+    });
+  };
+
   window.showProfileView = function(view) {
     document.getElementById('profile-dashboard').style.display = 'none';
     document.getElementById('profile-edit-view').style.display = 'none';
@@ -1170,6 +1323,14 @@
       showProfileView('dashboard');
     }
 
+    // Check theme on page load / profile load
+    const savedTheme = localStorage.getItem('gg_theme');
+    if (savedTheme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+
     try {
       const res = await fetch(`${API_BASE}/api/v1/customers/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -1180,12 +1341,65 @@
       const profile = json.data || json;
       
       const name = profile.name || 'User';
-      document.getElementById('profile-header-name').innerText = name;
       document.getElementById('profile-name').value = name;
       document.getElementById('profile-phone').value = profile.phone || '';
       document.getElementById('profile-address').value = profile.address || '';
       
-      loadOrderHistory(profile.orders || []);
+      // REDESIGNED STATS AND BADGES BINDER
+      const orders = profile.orders || [];
+      const ltv = Number(profile.lifetime_value || 0);
+      const points = Math.floor(ltv / 10);
+      
+      document.getElementById('profile-hero-name').innerText = name;
+      document.getElementById('profile-summary-orders').innerText = orders.length;
+      document.getElementById('profile-summary-spent').innerText = '৳' + Math.floor(ltv).toLocaleString();
+      document.getElementById('profile-summary-points').innerText = points;
+
+      // Membership Badge
+      const badgeEl = document.getElementById('profile-membership-badge');
+      if (badgeEl) {
+        badgeEl.className = 'profile-membership-badge';
+        if (ltv >= 10000) {
+          badgeEl.classList.add('badge-gold');
+          badgeEl.innerText = '🥇 Gold Member';
+        } else if (ltv >= 4000) {
+          badgeEl.classList.add('badge-silver');
+          badgeEl.innerText = '🥈 Silver Member';
+        } else {
+          badgeEl.classList.add('badge-bronze');
+          badgeEl.innerText = '🥉 Bronze Member';
+        }
+      }
+
+      // Quick action badges
+      const shippingCount = orders.filter(o => ['packed', 'courier_booked', 'in_transit'].includes(o.status.toLowerCase())).length;
+      const deliveredCount = orders.filter(o => o.status.toLowerCase() === 'delivered').length;
+      
+      document.getElementById('badge-orders-all').innerText = orders.length;
+      document.getElementById('badge-orders-shipping').innerText = shippingCount;
+      document.getElementById('badge-orders-delivered').innerText = deliveredCount;
+      document.getElementById('badge-wishlist-count').innerText = window.userWishlist ? window.userWishlist.length : 0;
+      document.getElementById('badge-rewards-points').innerText = points;
+
+      // Load avatar from localStorage
+      let userId = null;
+      try {
+        const base64Url = token.split('.')[1];
+        const base64Clean = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64Clean));
+        userId = payload.sub || payload.id;
+      } catch(e) {}
+      
+      const avatarImg = document.getElementById('profile-avatar-img');
+      if (avatarImg) {
+        const savedAvatar = userId ? localStorage.getItem('gg_avatar_' + userId) : null;
+        avatarImg.src = savedAvatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+      }
+
+      // Render Dynamic Menu
+      renderProfileMenu();
+      
+      loadOrderHistory(orders);
     } catch (err) {
       console.error(err);
       localStorage.removeItem('gg_token');
