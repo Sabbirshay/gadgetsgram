@@ -97,6 +97,21 @@
     const form = document.getElementById('order-form');
     if (!form) return;
 
+    // Listener for product select dropdown fallback
+    const select = document.getElementById('order-product');
+    if (select) {
+      select.addEventListener('change', () => {
+        const productIdVal = select.value;
+        if (productIdVal) {
+          const productId = parseInt(productIdVal, 10);
+          if (productId) {
+            addToCart(productId);
+            select.value = ''; // Reset select
+          }
+        }
+      });
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -104,30 +119,46 @@
       const originalText = btn.innerText;
       btn.innerText = 'Submitting...';
       btn.disabled = true;
-      
-      const newIdInput = document.getElementById('order-product-id');
-      const oldSelect = document.getElementById('order-product');
-      const productIdVal = (newIdInput && newIdInput.value) ? newIdInput.value : (oldSelect ? oldSelect.value : '');
 
-      if (!productIdVal) {
-        const errorMsg = document.getElementById('order-error-msg');
+      const customerName = document.getElementById('order-name').value;
+      const phone = document.getElementById('order-phone').value;
+      const address = document.getElementById('order-address').value;
+      const district = document.getElementById('order-district').value;
+      
+      const errorMsg = document.getElementById('order-error-msg');
+      if (errorMsg) errorMsg.style.display = 'none';
+
+      // Check if we are using cart items
+      const cart = getCart();
+      
+      let itemsToOrder = [];
+      if (cart.length > 0) {
+        itemsToOrder = cart.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        }));
+      } else {
+        const oldSelect = document.getElementById('order-product');
+        const oldIdInput = document.getElementById('order-product-id');
+        const productIdVal = (oldIdInput && oldIdInput.value) ? oldIdInput.value : (oldSelect ? oldSelect.value : '');
+        
+        if (productIdVal) {
+          itemsToOrder.push({
+            productId: parseInt(productIdVal, 10),
+            quantity: 1
+          });
+        }
+      }
+
+      if (itemsToOrder.length === 0) {
         if (errorMsg) {
-          errorMsg.textContent = 'Please select a product to order.';
+          errorMsg.textContent = 'Please select a product or add items to your cart first.';
           errorMsg.style.display = 'block';
         }
         btn.innerText = originalText;
         btn.disabled = false;
         return;
       }
-
-      const payload = {
-        customerName: document.getElementById('order-name').value,
-        phone: document.getElementById('order-phone').value,
-        address: document.getElementById('order-address').value,
-        district: document.getElementById('order-district').value,
-        productId: parseInt(productIdVal, 10),
-        quantity: 1
-      };
 
       try {
         const headers = {
@@ -138,22 +169,44 @@
           headers['Authorization'] = 'Bearer ' + token;
         }
 
-        const res = await fetch(API_BASE + '/api/v1/orders', {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(payload)
+        // Submit each item as a separate order request in parallel
+        const orderPromises = itemsToOrder.map(item => {
+          const payload = {
+            customerName,
+            phone,
+            address,
+            district,
+            productId: item.productId,
+            quantity: item.quantity
+          };
+          return fetch(API_BASE + '/api/v1/orders', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(payload)
+          }).then(async res => {
+            if (!res.ok) {
+              const errData = await res.json().catch(() => ({}));
+              throw new Error(errData.message || 'Failed to submit order for some items');
+            }
+            return res.json();
+          });
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          const orderData = data.data || data;
-          form.reset();
-          window.routeTo('/order/success?id=' + orderData.orderId);
-        } else {
-          throw new Error('Failed to submit');
-        }
+        const results = await Promise.all(orderPromises);
+        const orderIds = results.map(r => r.data?.orderId || r.orderId).filter(Boolean);
+
+        // Clear cart
+        clearCart();
+        form.reset();
+
+        // Redirect to success screen with all order IDs comma separated
+        window.routeTo('/order/success?id=' + orderIds.join(', '));
+
       } catch (err) {
-        document.getElementById('order-error-msg').style.display = 'block';
+        if (errorMsg) {
+          errorMsg.textContent = err.message || 'Failed to place order. Please try again.';
+          errorMsg.style.display = 'block';
+        }
       } finally {
         btn.innerText = originalText;
         btn.disabled = false;
@@ -776,30 +829,16 @@
   };
 
   window.openOrderForm = function(productId) {
-    const product = globalProducts.find(p => p.id === productId);
-    if (!product) return;
-
-    const orderProductId = document.getElementById('order-product-id');
-    if (orderProductId) orderProductId.value = productId;
-    
-    const productGroup = document.getElementById('order-product-group');
-    if (productGroup) productGroup.style.display = 'none';
-
-    const select = document.getElementById('order-product');
-    if (select) select.required = false;
-    
-    const summaryCard = document.getElementById('order-product-summary');
-    if (summaryCard) {
-      summaryCard.style.display = 'flex';
-      
-      let images = [];
-      try { images = JSON.parse(product.images); } catch(e){}
-      let mainImg = images.length > 0 ? images[0] : 'assets/headphone.png';
-      if (mainImg.startsWith('/')) mainImg = API_BASE + mainImg;
-      
-      document.getElementById('order-summary-img').src = mainImg;
-      document.getElementById('order-summary-title').textContent = product.title || product.nameEn;
-      document.getElementById('order-summary-price').textContent = product.sale_price ? `৳${product.sale_price}` : `৳${product.price}`;
+    if (productId) {
+      const product = globalProducts.find(p => p.id === productId);
+      if (product) {
+        let cart = getCart();
+        if (!cart.some(item => item.product.id === productId)) {
+          cart.push({ product, quantity: 1 });
+          saveCart(cart);
+          updateCartUI();
+        }
+      }
     }
 
     const modal = document.getElementById('product-detail-overlay');
@@ -1153,6 +1192,7 @@
     e.preventDefault();
     const token = localStorage.getItem('gg_token');
     const name = document.getElementById('profile-name').value;
+    const phone = document.getElementById('profile-phone').value;
     const address = document.getElementById('profile-address').value;
     const msg = document.getElementById('profile-msg');
     const btn = document.getElementById('profile-save-btn');
@@ -1167,7 +1207,7 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ name, address })
+        body: JSON.stringify({ name, phone, address })
       });
       
       if (res.ok) {
@@ -1354,7 +1394,7 @@
      7. STATE MANAGEMENT (WISHLIST & CART)
      ══════════════════════════════════════════════════════════════ */
   let userWishlist = [];
-  let cartItem = null;
+  let userCart = [];
 
   window.fetchWishlist = async function() {
     const token = localStorage.getItem('gg_token');
@@ -1448,23 +1488,53 @@
     });
   }
 
+  // Get cart from localStorage
+  window.getCart = function() {
+    const saved = localStorage.getItem('gg_cart');
+    if (!saved) return [];
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        // Upgrade from old single item format
+        return [{ product: parsed, quantity: 1 }];
+      }
+    } catch(e) {
+      console.error(e);
+    }
+    return [];
+  };
+
+  // Save cart to localStorage
+  window.saveCart = function(cart) {
+    localStorage.setItem('gg_cart', JSON.stringify(cart));
+  };
+
   window.addToCart = function(productId, e) {
     if(e) e.stopPropagation();
     const product = globalProducts.find(p => p.id === productId);
     if (!product) return;
     
-    cartItem = product;
-    localStorage.setItem('gg_cart', JSON.stringify(cartItem));
+    let cart = getCart();
+    const existing = cart.find(item => item.product.id === productId);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ product, quantity: 1 });
+    }
+    saveCart(cart);
     updateCartUI();
     
     // Auto-open order form after adding
-    openOrderForm(productId);
+    openOrderForm();
   };
 
   window.openCart = function(e) {
     if(e) e.preventDefault();
-    if (cartItem) {
-      openOrderForm(cartItem.id);
+    const cart = getCart();
+    if (cart.length > 0) {
+      openOrderForm();
     } else {
       alert("Your cart is empty. Please add a product to order.");
       const shopSection = document.getElementById('products');
@@ -1472,13 +1542,31 @@
     }
   };
 
-  function updateCartUI() {
-    const cartSaved = localStorage.getItem('gg_cart');
-    if (cartSaved) {
-      try { cartItem = JSON.parse(cartSaved); } catch(e){}
+  window.updateItemQuantity = function(productId, quantity) {
+    let cart = getCart();
+    const item = cart.find(item => item.product.id === productId);
+    if (item) {
+      item.quantity = Math.max(1, quantity);
+      saveCart(cart);
+      updateCartUI();
     }
+  };
 
-    const count = cartItem ? '1' : '0';
+  window.removeFromCart = function(productId) {
+    let cart = getCart();
+    cart = cart.filter(item => item.product.id !== productId);
+    saveCart(cart);
+    updateCartUI();
+  };
+
+  window.clearCart = function() {
+    saveCart([]);
+    updateCartUI();
+  };
+
+  window.updateCartUI = function() {
+    const cart = getCart();
+    const count = cart.reduce((sum, item) => sum + item.quantity, 0);
     
     // Desktop Nav Badge
     const navCartBadge = document.querySelector('.nav-link[href="#cart"] span:last-child');
@@ -1487,7 +1575,74 @@
     // Mobile Bottom Bar Badge
     const mobileCartBadge = document.querySelector('.bottom-bar-item[href="#cart"] .badge');
     if(mobileCartBadge) mobileCartBadge.innerText = count;
-  }
+
+    // Render cart items inside order checkout summary card
+    const summaryCard = document.getElementById('order-product-summary');
+    const productGroup = document.getElementById('order-product-group');
+    const select = document.getElementById('order-product');
+    const cartItemsList = document.getElementById('cart-items-list');
+
+    if (!summaryCard) return;
+
+    if (cart.length === 0) {
+      summaryCard.style.display = 'none';
+      if (productGroup) productGroup.style.display = 'block';
+      if (select) select.required = true;
+    } else {
+      summaryCard.style.display = 'flex';
+      if (productGroup) productGroup.style.display = 'none';
+      if (select) select.required = false;
+
+      if (cartItemsList) {
+        cartItemsList.innerHTML = '';
+        let subtotal = 0;
+        
+        cart.forEach(item => {
+          const p = item.product;
+          let images = [];
+          try { images = JSON.parse(p.images); } catch(e){}
+          let mainImg = images.length > 0 ? images[0] : 'assets/headphone.png';
+          if (mainImg.startsWith('/')) mainImg = API_BASE + mainImg;
+          
+          const price = Number(p.sale_price || p.price);
+          const itemTotal = price * item.quantity;
+          subtotal += itemTotal;
+
+          const itemEl = document.createElement('div');
+          itemEl.style.display = 'flex';
+          itemEl.style.alignItems = 'center';
+          itemEl.style.gap = '15px';
+          itemEl.style.background = 'rgba(255, 255, 255, 0.05)';
+          itemEl.style.padding = '10px';
+          itemEl.style.borderRadius = '8px';
+          itemEl.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+          itemEl.style.width = '100%';
+          
+          itemEl.innerHTML = `
+            <img src="${mainImg}" alt="${p.title}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 6px; background: white;" />
+            <div style="flex: 1;">
+              <div style="color: white; font-weight: 600; font-size: 0.9rem; line-height: 1.2; margin-bottom: 4px;">${p.title}</div>
+              <div style="color: var(--orange-400); font-weight: 700; font-size: 0.9rem;">৳${price}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" style="background: rgba(255,255,255,0.1); width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;" onclick="updateItemQuantity(${p.id}, ${item.quantity - 1})">-</button>
+              <span style="color: white; font-weight: 600; min-width: 16px; text-align: center;">${item.quantity}</span>
+              <button type="button" style="background: rgba(255,255,255,0.1); width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white;" onclick="updateItemQuantity(${p.id}, ${item.quantity + 1})">+</button>
+            </div>
+            <button type="button" style="color: var(--danger); font-size: 1.1rem; margin-left: 5px; padding: 5px; cursor: pointer;" onclick="removeFromCart(${p.id})">✕</button>
+          `;
+          cartItemsList.appendChild(itemEl);
+        });
+
+        const deliveryCharge = 60 * cart.length;
+        const total = subtotal + deliveryCharge;
+
+        document.getElementById('cart-subtotal-val').textContent = `৳${subtotal}`;
+        document.getElementById('cart-delivery-val').textContent = `৳${deliveryCharge} (৳60 x ${cart.length})`;
+        document.getElementById('cart-total-val').textContent = `৳${total}`;
+      }
+    }
+  };
 
   // Initialize State
   fetchWishlist();
