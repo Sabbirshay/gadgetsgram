@@ -27,6 +27,24 @@ export class AppController {
   }
 
   @Public()
+  @Get('profile')
+  getProfile(@Res() res: Response) {
+    res.sendFile(join(__dirname, '..', 'public', 'index.html'));
+  }
+
+  @Public()
+  @Get('track')
+  getTrack(@Res() res: Response) {
+    res.sendFile(join(__dirname, '..', 'public', 'index.html'));
+  }
+
+  @Public()
+  @Get('order/success')
+  getOrderSuccess(@Res() res: Response) {
+    res.sendFile(join(__dirname, '..', 'public', 'index.html'));
+  }
+
+  @Public()
   @Get('health')
   async getHealth() {
     let dbStatus = 'healthy';
